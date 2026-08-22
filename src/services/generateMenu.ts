@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { menuCourses, type EventMenu } from '../../shared/menu'
 import type { PlanningEventInterpretation } from '../domain/planning'
+import { getApiUrl } from './apiUrl'
 
 const menuSchema = z.object({
   title: z.string().min(1),
@@ -44,7 +45,7 @@ export async function generateMenu(
 
   let response: Response
   try {
-    response = await fetchImplementation('/api/generate-menu', {
+    response = await fetchImplementation(getApiUrl('/api/generate-menu'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(request),

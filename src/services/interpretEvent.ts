@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import type { InterpretEventRequest } from '../../shared/eventInterpretation'
 import type { PlanningEventInterpretation } from '../domain/planning'
+import { getApiUrl } from './apiUrl'
 
 const responseSchema = z.object({
   eventType: z.string().nullable(),
@@ -34,7 +35,7 @@ export async function interpretEvent(
   let response: Response
 
   try {
-    response = await fetchImplementation('/api/interpret-event', {
+    response = await fetchImplementation(getApiUrl('/api/interpret-event'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(request),

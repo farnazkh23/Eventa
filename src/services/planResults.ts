@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { menuCourses, type EventMenu } from '../../shared/menu'
 import type { ProductMatchPlan, QuantityPlan } from '../domain/planResults'
 import type { PlanningEventInterpretation } from '../domain/planning'
+import { getApiUrl } from './apiUrl'
 
 const unitSchema = z.enum(['g', 'ml', 'piece'])
 const productSchema = z.object({
@@ -42,7 +43,7 @@ export class PlanResultsServiceError extends Error {}
 
 async function postAndParse<T>(path: string, body: unknown, schema: z.ZodType<T>, invalidMessage: string, unavailableMessage = 'This planning step is not available from the current backend.'): Promise<T> {
   let response: Response
-  try { response = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }) }
+  try { response = await fetch(getApiUrl(path), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }) }
   catch { throw new PlanResultsServiceError('Eventa could not reach the planning service. Please try again.') }
   if (!response.ok) throw new PlanResultsServiceError(response.status === 400 ? 'The planning service needs updated event data. Please review the plan and retry.' : response.status === 404 ? unavailableMessage : 'Eventa could not complete this planning step. Please try again.')
   try { return schema.parse(await response.json()) }
