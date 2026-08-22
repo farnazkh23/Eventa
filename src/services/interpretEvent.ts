@@ -1,5 +1,6 @@
 import { z } from 'zod'
-import type { EventInterpretation, InterpretEventRequest } from '../../shared/eventInterpretation'
+import type { InterpretEventRequest } from '../../shared/eventInterpretation'
+import type { PlanningEventInterpretation } from '../domain/planning'
 
 const responseSchema = z.object({
   eventType: z.string().nullable(),
@@ -11,7 +12,10 @@ const responseSchema = z.object({
   serviceStyle: z.string().nullable(),
   budgetPerGuest: z.number().nonnegative().nullable(),
   totalBudget: z.number().nonnegative().nullable(),
-  dietaryRequirements: z.array(z.string()),
+  dietaryRequirements: z.array(z.object({
+    type: z.string().min(1),
+    guestCount: z.number().int().nonnegative().nullable(),
+  })),
   additionalNotes: z.array(z.string()),
 })
 
@@ -25,7 +29,7 @@ export class InterpretEventServiceError extends Error {
 export async function interpretEvent(
   description: string,
   fetchImplementation: typeof fetch = fetch,
-): Promise<EventInterpretation> {
+): Promise<PlanningEventInterpretation> {
   const request: InterpretEventRequest = { description }
   let response: Response
 

@@ -28,8 +28,8 @@ describe('Eventa navigation history', () => {
 
   it('drops obsolete forward entries after a new route is visited', () => {
     let history: RouteHistory = { entries: ['/', '/interpretation', '/plan'], index: 1 }
-    history = visit(history, '/plan/basics')
-    expect(history).toEqual({ entries: ['/', '/interpretation', '/plan/basics'], index: 2 })
+    history = visit(history, '/plan/details')
+    expect(history).toEqual({ entries: ['/', '/interpretation', '/plan/details'], index: 2 })
   })
 })
 

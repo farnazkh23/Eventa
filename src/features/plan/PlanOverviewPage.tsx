@@ -1,21 +1,34 @@
-import { Check, HandPlatter, Package, Scale, ShoppingCart, SlidersHorizontal, WalletCards } from 'lucide-react'
-import { Navigate, useNavigate } from 'react-router-dom'
+import { CalendarPlus, Check, ClipboardList, HandPlatter, Package, Scale, ShoppingCart, SlidersHorizontal, WalletCards } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { useEffect } from 'react'
 import { usePlanning } from '../../app/PlanningContext'
-import { BottomNavigation } from '../../components/layout/BottomNavigation'
 import { MobileHeader } from '../../components/layout/MobileHeader'
 import { MobileShell } from '../../components/layout/MobileShell'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
 import { PlanListItem } from '../../components/ui/PlanListItem'
+import { PendingState } from '../../components/ui/PendingState'
+import { PlanPage } from '../../components/layout/PlanPage'
 import { PlanSummaryCard } from './PlanSummaryCard'
 import styles from './PlanOverviewPage.module.css'
 
 export function PlanOverviewPage() {
-  const { state } = usePlanning()
+  const { state, retryQuantities } = usePlanning()
   const navigate = useNavigate()
   const { confirmedEvent, menu } = state
 
-  if (!menu) return <Navigate to="/interpretation" replace />
+  useEffect(() => {
+    if (menu && state.quantityStatus === 'idle') void retryQuantities()
+  }, [menu, retryQuantities, state.quantityStatus])
+
+  if (!menu) {
+    return (
+      <PlanPage title="Your event plan" subtitle="Your current Eventa plan will appear here.">
+        <PendingState title="No current plan" description="Start a new plan, review the event details, and let Eventa build your menu." icon={CalendarPlus} />
+        <Button type="button" fullWidth className={styles.review} onClick={() => navigate('/')}>Start a new plan</Button>
+      </PlanPage>
+    )
+  }
 
   const eventTitle = confirmedEvent.eventType ?? menu.title
   const metadata = [
@@ -25,7 +38,7 @@ export function PlanOverviewPage() {
   ].filter((value): value is string => Boolean(value))
 
   return (
-    <MobileShell compact contentMode="fixed" bottomNavigation={<BottomNavigation />}>
+    <MobileShell compact contentMode="fixed">
       <div className={styles.page}>
         <MobileHeader
           action={
@@ -50,15 +63,15 @@ export function PlanOverviewPage() {
 
           <div className={styles.basics}>
             <PlanListItem
-              title="My Basics"
+              title="Event details"
               detail={[
                 confirmedEvent.guestCount ? `${confirmedEvent.guestCount} guests` : null,
                 confirmedEvent.location,
                 confirmedEvent.serviceStyle ?? confirmedEvent.mealType,
               ].filter(Boolean).join(' · ') || 'Review event details'}
               icon={SlidersHorizontal}
-              onClick={() => navigate('/plan/basics')}
-              ariaLabel="Review My Basics"
+              onClick={() => navigate('/plan/details')}
+              ariaLabel="Review event details"
             />
           </div>
 
@@ -82,19 +95,38 @@ export function PlanOverviewPage() {
               <small>{menu.items.slice(0, 4).map((item) => item.name).join(', ')}</small>
             </PlanSummaryCard>
             <PlanSummaryCard icon={Scale} iconTone="blue" title="Quantities" ariaLabel="Open quantity overview" onClick={() => navigate('/plan/quantities')}>
-              <span>Not calculated yet</span>
+              <span>{quantitySummary(state)}</span>
             </PlanSummaryCard>
             <PlanSummaryCard icon={Package} iconTone="rose" title="Transgourmet products" ariaLabel="Open products overview" onClick={() => navigate('/plan/products')}>
-              <span>Not matched yet</span>
+              <span>{productSummary(state)}</span>
             </PlanSummaryCard>
             <PlanSummaryCard icon={WalletCards} iconTone="green" title="Budget" ariaLabel="Open budget" onClick={() => navigate('/plan/budget')}>
               <span>Calculated after product matching</span>
             </PlanSummaryCard>
+            <PlanSummaryCard icon={ClipboardList} iconTone="neutral" title="Shopping list" ariaLabel="Open shopping list" onClick={() => navigate('/plan/shopping-list')}>
+              <span>Available after product matching</span>
+            </PlanSummaryCard>
           </section>
 
-          <Button type="button" fullWidth className={styles.review} onClick={() => navigate('/plan/shopping-list')}>Review shopping list</Button>
+          <Button type="button" fullWidth className={styles.review} onClick={() => navigate('/plan/summary')}>View final summary</Button>
         </div>
       </div>
     </MobileShell>
   )
+}
+
+function quantitySummary(state: ReturnType<typeof usePlanning>['state']) {
+  if (state.quantityStatus === 'loading' || state.quantityStatus === 'idle') return 'Calculating quantities…'
+  if (state.quantityStatus === 'error') return 'Calculation failed · retry available'
+  if (!state.quantityPlan) return 'Quantities unresolved'
+  const calculated = state.quantityPlan.itemAllocations.filter((item) => item.status === 'calculated').length
+  return state.quantityPlan.isComplete ? `${calculated} selections calculated` : calculated ? `${calculated} calculated · confirmation needed` : 'Quantities unresolved'
+}
+
+function productSummary(state: ReturnType<typeof usePlanning>['state']) {
+  if (state.quantityStatus === 'loading' || state.productStatus === 'loading' || state.productStatus === 'idle') return 'Matching products…'
+  if (state.productStatus === 'error') return 'Matching failed · retry available'
+  if (!state.productPlan || state.productPlan.summary.matched === 0) return 'Products unresolved'
+  const { matched, lowConfidence, unresolved } = state.productPlan.summary
+  return lowConfidence || unresolved ? `${matched} matched · confirmation needed` : `${matched} products matched`
 }

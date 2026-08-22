@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest'
-import type { EventInterpretation } from '../../shared/eventInterpretation'
+import type { PlanningEventInterpretation } from '../domain/planning'
 import { generateMenu } from './generateMenu'
 
-const event: EventInterpretation = {
+const event: PlanningEventInterpretation = {
   eventType: 'Birthday',
   guestCount: 35,
   location: 'Zürich',
@@ -12,7 +12,7 @@ const event: EventInterpretation = {
   serviceStyle: 'seated dinner',
   budgetPerGuest: null,
   totalBudget: null,
-  dietaryRequirements: ['vegan'],
+  dietaryRequirements: [{ type: 'vegan', guestCount: 4 }],
   additionalNotes: ['4 guests are vegan'],
 }
 

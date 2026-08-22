@@ -1,7 +1,12 @@
+.container {
+  position: relative;
+  z-index: 2;
+  flex: 0 0 auto;
+}
+
 .nav {
   position: relative;
   z-index: 1;
-  flex: 0 0 auto;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 0.2rem;
@@ -10,6 +15,53 @@
   background: rgba(255, 255, 255, 0.91);
   box-shadow: 0 -12px 30px rgba(64, 75, 100, 0.06);
   backdrop-filter: blur(18px);
+}
+
+.confirmation {
+  position: absolute;
+  right: 1rem;
+  bottom: calc(100% + 0.6rem);
+  left: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.confirmation strong {
+  font-size: 0.98rem;
+}
+
+.confirmation p {
+  margin: 0.3rem 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.confirmation > div {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.8rem;
+}
+
+.confirmation button {
+  min-height: 44px;
+  padding: 0.55rem 0.8rem;
+  border: 0;
+  border-radius: var(--radius-pill);
+  color: var(--color-text);
+  background: var(--color-surface-soft);
+  font-size: 0.82rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.confirmation .confirmAction {
+  color: #fff;
+  background: var(--color-brand);
 }
 
 .item {

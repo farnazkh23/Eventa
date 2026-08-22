@@ -1,5 +1,4 @@
-import type { EventInterpretation } from '../../shared/eventInterpretation'
-import type { InterpretationField } from '../domain/planning'
+import type { DietaryRequirement, InterpretationField, PlanningEventInterpretation } from '../domain/planning'
 
 const chfNumber = new Intl.NumberFormat('en-CH', { maximumFractionDigits: 2 })
 
@@ -7,7 +6,13 @@ function displayMoney(value: number | null, suffix: string): string {
   return value === null ? '' : `CHF ${chfNumber.format(value)} ${suffix}`
 }
 
-export function toInterpretationFields(data: EventInterpretation): InterpretationField[] {
+function displayDietaryRequirement(requirement: DietaryRequirement): string {
+  if (requirement.guestCount === null) return requirement.type
+  const guestLabel = requirement.guestCount === 1 ? 'guest' : 'guests'
+  return `${requirement.type} (${requirement.guestCount} ${guestLabel})`
+}
+
+export function toInterpretationFields(data: PlanningEventInterpretation): InterpretationField[] {
   return [
     { id: 'eventType', label: 'Event type', value: data.eventType ?? '', editable: true },
     {
@@ -41,7 +46,7 @@ export function toInterpretationFields(data: EventInterpretation): Interpretatio
     {
       id: 'dietaryRequirements',
       label: 'Dietary needs',
-      value: data.dietaryRequirements.join(', '),
+      value: data.dietaryRequirements.map(displayDietaryRequirement).join(', '),
       editable: true,
     },
     {
@@ -71,10 +76,22 @@ function listValues(value: string): string[] {
     .filter(Boolean)
 }
 
+function dietaryValues(value: string): DietaryRequirement[] {
+  return listValues(value).map((item) => {
+    const match = item.match(/^(.*?)(?:\s*\((\d+)\s+guests?\))?$/i)
+    const type = match?.[1]?.trim() || item
+    const countText = match?.[2]
+    return {
+      type,
+      guestCount: countText === undefined ? null : Number(countText),
+    }
+  })
+}
+
 export function applyInterpretationFieldEdit(
-  event: EventInterpretation,
+  event: PlanningEventInterpretation,
   field: InterpretationField,
-): EventInterpretation {
+): PlanningEventInterpretation {
   switch (field.id) {
     case 'eventType':
     case 'location':
@@ -89,12 +106,13 @@ export function applyInterpretationFieldEdit(
     case 'totalBudget':
       return { ...event, [field.id]: optionalNumber(field.value) }
     case 'dietaryRequirements':
+      return { ...event, dietaryRequirements: dietaryValues(field.value) }
     case 'additionalNotes':
       return { ...event, [field.id]: listValues(field.value) }
   }
 }
 
-export const emptyEventInterpretation: EventInterpretation = {
+export const emptyEventInterpretation: PlanningEventInterpretation = {
   eventType: null,
   guestCount: null,
   location: null,

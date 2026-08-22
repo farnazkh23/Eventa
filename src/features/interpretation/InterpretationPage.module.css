@@ -5,18 +5,13 @@
   min-height: 0;
 }
 
-.page > header,
-.progress {
+.page > header {
   flex: 0 0 auto;
-}
-
-.progress {
-  margin-top: 1.8rem;
 }
 
 .intro {
   flex: 0 0 auto;
-  margin: 2rem 0 1.2rem;
+  margin: 1rem 0 1rem;
 }
 
 .intro h1 {
@@ -38,7 +33,7 @@
   flex: 1 1 auto;
   min-height: 8.5rem;
   max-height: clamp(10rem, 35dvh, 24rem);
-  gap: 0.5rem;
+  gap: 0.4rem;
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior-y: contain;
@@ -77,8 +72,8 @@
 .actions {
   display: grid;
   flex: 0 0 auto;
-  gap: 1.35rem;
-  margin-top: 1.4rem;
+  gap: 1rem;
+  margin-top: 1rem;
 }
 
 .actions > :last-child {
@@ -87,12 +82,8 @@
 }
 
 @media (max-height: 720px) {
-  .progress {
-    margin-top: 1rem;
-  }
-
   .intro {
-    margin-block: 1.1rem 0.8rem;
+    margin-block: 0.8rem;
   }
 
   .actions {

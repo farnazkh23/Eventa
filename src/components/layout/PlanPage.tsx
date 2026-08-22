@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react'
-import { BottomNavigation } from './BottomNavigation'
 import { MobileHeader } from './MobileHeader'
 import { MobileShell } from './MobileShell'
 import styles from './PlanPage.module.css'
@@ -23,7 +22,7 @@ export function PlanPage({
     <MobileShell
       compact
       contentMode="fixed"
-      bottomNavigation={bottomNavigation ? <BottomNavigation /> : undefined}
+      showBottomNavigation={bottomNavigation}
     >
       <div className={styles.page}>
         <MobileHeader />

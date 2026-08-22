@@ -2,7 +2,6 @@ import { Scale } from 'lucide-react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { menuCourses, type MenuCourse } from '../../../shared/menu'
 import { usePlanning } from '../../app/PlanningContext'
-import { BottomNavigation } from '../../components/layout/BottomNavigation'
 import { MobileHeader } from '../../components/layout/MobileHeader'
 import { MobileShell } from '../../components/layout/MobileShell'
 import { Card } from '../../components/ui/Card'
@@ -36,7 +35,7 @@ export function MenuPage() {
     .filter(({ items }) => items.length > 0)
 
   return (
-    <MobileShell compact contentMode="fixed" bottomNavigation={<BottomNavigation />}>
+    <MobileShell compact contentMode="fixed">
       <div className={styles.page}>
         <MobileHeader />
 

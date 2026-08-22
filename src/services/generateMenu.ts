@@ -1,6 +1,6 @@
 import { z } from 'zod'
-import type { EventInterpretation } from '../../shared/eventInterpretation'
-import { menuCourses, type EventMenu, type GenerateMenuRequest } from '../../shared/menu'
+import { menuCourses, type EventMenu } from '../../shared/menu'
+import type { PlanningEventInterpretation } from '../domain/planning'
 
 const menuSchema = z.object({
   title: z.string().min(1),
@@ -33,11 +33,11 @@ export class GenerateMenuServiceError extends Error {
 }
 
 export async function generateMenu(
-  event: EventInterpretation,
+  event: PlanningEventInterpretation,
   originalDescription: string,
   fetchImplementation: typeof fetch = fetch,
 ): Promise<EventMenu> {
-  const request: GenerateMenuRequest = {
+  const request: { event: PlanningEventInterpretation; originalDescription?: string } = {
     event,
     ...(originalDescription.trim() ? { originalDescription } : {}),
   }

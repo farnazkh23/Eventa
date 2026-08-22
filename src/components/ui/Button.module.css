@@ -3,11 +3,11 @@
   border: 0;
   cursor: pointer;
   font-weight: 650;
-  transition: transform 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
+  transition: transform 160ms cubic-bezier(0.25, 1, 0.5, 1), background-color 160ms ease, box-shadow 160ms ease;
 }
 
 .button:not(:disabled):active {
-  transform: scale(0.985);
+  transform: scale(0.98);
 }
 
 .primary {

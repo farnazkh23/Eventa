@@ -1,9 +1,5 @@
-.progress {
-  margin-top: 2.25rem;
-}
-
 .intro {
-  margin: 2.55rem 0 1.5rem;
+  margin: 1rem 0 1.25rem;
 }
 
 .intro h1 {
@@ -23,7 +19,7 @@
 
 .form {
   display: grid;
-  gap: 1.5rem;
+  gap: 1.25rem;
 }
 
 .form > :last-child {

@@ -11,7 +11,10 @@ const validResult = {
   serviceStyle: 'buffet',
   budgetPerGuest: 45,
   totalBudget: null,
-  dietaryRequirements: ['vegetarian'],
+  dietaryRequirements: [
+    { type: 'vegetarian', guestCount: null },
+    { type: 'vegan', guestCount: 8 },
+  ],
   additionalNotes: [],
 }
 
@@ -49,6 +52,16 @@ describe('interpretEvent', () => {
     )
 
     await expect(interpretEvent('Birthday dinner for 35 guests', fetchMock)).rejects.toThrow(
+      'Eventa received an invalid response. Please try again.',
+    )
+  })
+
+  it('rejects malformed structured dietary requirements', async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response(JSON.stringify({ ...validResult, dietaryRequirements: [{ type: 'vegan', guestCount: '8' }] }), { status: 200 }),
+    )
+
+    await expect(interpretEvent('Dinner for vegan guests', fetchMock)).rejects.toThrow(
       'Eventa received an invalid response. Please try again.',
     )
   })

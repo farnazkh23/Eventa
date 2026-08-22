@@ -6,7 +6,6 @@ import { MobileShell } from '../../components/layout/MobileShell'
 import { AiNote } from '../../components/ui/AiNote'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
-import { ProgressIndicator } from '../../components/ui/ProgressIndicator'
 import { TextAreaField } from '../../components/ui/TextAreaField'
 import { sampleBrief } from '../../services/mockPlanningService'
 import styles from './DescribeEventPage.module.css'
@@ -38,10 +37,7 @@ export function DescribeEventPage() {
 
   return (
     <MobileShell>
-      <MobileHeader />
-      <div className={styles.progress}>
-        <ProgressIndicator current={1} total={6} />
-      </div>
+      <MobileHeader showHistory={false} />
 
       <section className={styles.intro} aria-labelledby="describe-title">
         <h1 id="describe-title">Tell us about<br />your event</h1>

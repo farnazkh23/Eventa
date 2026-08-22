@@ -35,7 +35,7 @@ const fieldIcons: Record<InterpretationFieldId, LucideIcon> = {
   additionalNotes: FileText,
 }
 
-export function BasicsPage() {
+export function EventDetailsPage() {
   const navigate = useNavigate()
   const { state, regeneratePlanWithBasics } = usePlanning()
   const [draftFields, setDraftFields] = useState(state.interpretation)
@@ -56,7 +56,7 @@ export function BasicsPage() {
   }
 
   return (
-    <PlanPage title="My Basics" subtitle="Review the confirmed details Eventa uses to build your plan.">
+    <PlanPage title="Event details" subtitle="Review the confirmed details Eventa uses to build this plan.">
       <div className={styles.fields} aria-label="Confirmed event details">
         {draftFields.map((field) => (
           <EditableDetail key={field.id} field={field} icon={fieldIcons[field.id]} onSave={updateDraft} showLabel />

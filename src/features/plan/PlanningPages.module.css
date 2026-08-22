@@ -2,6 +2,7 @@
 .section { margin-top: 1.45rem; }
 .section h2 { margin: 0 0 .75rem; font-size: 1rem; font-weight: 700; }
 .action { margin-top: 1.4rem; }
+.stateBlock { display: grid; gap: .75rem; }
 .summary { display: grid; gap: .85rem; padding: 1.1rem; }
 .summaryRow { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; }
 .summaryRow span { display: inline-flex; align-items: center; gap: .45rem; color: var(--color-text-muted); font-size: .86rem; }
