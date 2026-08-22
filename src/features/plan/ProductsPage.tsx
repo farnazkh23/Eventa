@@ -15,7 +15,7 @@ export function ProductsPage() {
   const results = getPlanResults()
 
   return (
-    <PlanPage title="Products overview" subtitle="Transgourmet matches will be grouped by menu selection." backTo="/plan" backLabel="Back to plan overview">
+    <PlanPage title="Products overview" subtitle="Transgourmet matches will be grouped by menu selection.">
       {results.products.status === 'pending' && <PendingState title="Not matched yet" description="No Transgourmet products have been matched to this menu yet." icon={PackageSearch} />}
       <section className={styles.section} aria-labelledby="product-groups">
         <h2 id="product-groups">Menu selections</h2>

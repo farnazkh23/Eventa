@@ -8,9 +8,10 @@ interface EditableDetailProps {
   field: InterpretationField
   icon: LucideIcon
   onSave: (field: InterpretationField) => void
+  showLabel?: boolean
 }
 
-export function EditableDetail({ field, icon: Icon, onSave }: EditableDetailProps) {
+export function EditableDetail({ field, icon: Icon, onSave, showLabel = false }: EditableDetailProps) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(field.value)
   const isEmpty = !field.value
@@ -57,7 +58,10 @@ export function EditableDetail({ field, icon: Icon, onSave }: EditableDetailProp
       <IconContainer size="small" tone={isEmpty ? 'neutral' : 'brand'}>
         <Icon size={21} strokeWidth={1.8} aria-hidden="true" />
       </IconContainer>
-      <span className={isEmpty ? styles.muted : styles.value}>{field.value || 'Not specified'}</span>
+      <span className={styles.copy}>
+        {showLabel && <small>{field.label}</small>}
+        <span className={isEmpty ? styles.muted : styles.value}>{field.value || 'Not specified'}</span>
+      </span>
       <button
         type="button"
         className={styles.editButton}

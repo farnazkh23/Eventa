@@ -13,7 +13,7 @@ export function ShoppingListPage() {
   if (!state.menu) return <Navigate to="/interpretation" replace />
 
   return (
-    <PlanPage title="Shopping list" subtitle="A consolidated list will be created from matched products." backTo="/plan" backLabel="Back to plan overview">
+    <PlanPage title="Shopping list" subtitle="A consolidated list will be created from matched products.">
       <PendingState title="Not available yet" description="The shopping list will appear after quantities and product matches are ready." icon={ShoppingCart} />
       <section className={styles.section} aria-labelledby="shopping-status">
         <h2 id="shopping-status">Preparation status</h2>

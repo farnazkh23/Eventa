@@ -1,6 +1,17 @@
 .header {
+  position: relative;
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  min-height: 58px;
+  min-height: 98px;
+  flex-direction: column;
+  align-items: center;
 }
+
+.history { display: flex; justify-content: center; gap: 2rem; margin-top: .35rem; }
+.history button { display: grid; width: 40px; height: 40px; place-items: center; padding: 0; border: 0; color: var(--color-brand); background: transparent; cursor: pointer; }
+.history button:hover:not(:disabled) { color: var(--color-brand-hover); }
+.history button:disabled { color: #c5cad3; background: transparent; opacity: 1; }
+.logo { justify-self: center; padding: .2rem .35rem .35rem; border: 0; color: inherit; background: transparent; cursor: pointer; }
+.logo:hover { opacity: .82; }
+.logo > div { transform: scale(.82); transform-origin: top center; }
+.action { position: absolute; top: 0; right: 0; display: grid; width: 44px; min-height: 44px; place-items: center; }
+@media (max-width: 370px) { .logo > div { transform: scale(.74); } }

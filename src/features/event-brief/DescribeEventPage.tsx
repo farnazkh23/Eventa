@@ -73,7 +73,13 @@ export function DescribeEventPage() {
           </Card>
         ) : (
           <div id="event-description-help">
-            <AiNote>{isLoading ? 'Eventa is understanding your event.' : 'Eventa will extract the important details for you.'}</AiNote>
+            <AiNote>
+              {isLoading
+                ? 'Eventa is understanding your event.'
+                : state.planInvalidatedByBrief
+                  ? 'Your event description changed. Continue to review the details and regenerate your plan.'
+                  : 'Eventa will extract the important details for you.'}
+            </AiNote>
           </div>
         )}
         <Button

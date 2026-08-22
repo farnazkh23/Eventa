@@ -10,6 +10,7 @@ import { ProductsPage } from '../features/plan/ProductsPage'
 import { QuantitiesPage } from '../features/plan/QuantitiesPage'
 import { QuantityDetailPage } from '../features/plan/QuantityDetailPage'
 import { ShoppingListPage } from '../features/plan/ShoppingListPage'
+import { BasicsPage } from '../features/plan/BasicsPage'
 
 export function App() {
   return (
@@ -18,6 +19,7 @@ export function App() {
       <Route path="/interpretation" element={<InterpretationPage />} />
       <Route path="/plan" element={<PlanOverviewPage />} />
       <Route path="/plan/menu" element={<MenuPage />} />
+      <Route path="/plan/basics" element={<BasicsPage />} />
       <Route path="/plan/quantities" element={<QuantitiesPage />} />
       <Route path="/plan/quantities/:itemId" element={<QuantityDetailPage />} />
       <Route path="/plan/products" element={<ProductsPage />} />

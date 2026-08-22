@@ -1,0 +1,4 @@
+.fields { display: grid; gap: .55rem; }
+.fields + div { margin-top: 1.15rem; }
+.action { margin-top: 1.2rem; }
+.error { margin: 1rem 0 0; padding: .85rem 1rem; border-radius: var(--radius-sm); color: #8d1831; background: var(--color-brand-soft); font-size: .86rem; line-height: 1.45; }

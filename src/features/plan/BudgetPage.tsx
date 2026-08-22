@@ -15,7 +15,7 @@ export function BudgetPage() {
   const results = getPlanResults()
 
   return (
-    <PlanPage title="Budget" subtitle="Track the event total and cost per guest after products are priced." backTo="/plan" backLabel="Back to plan overview">
+    <PlanPage title="Budget" subtitle="Track the event total and cost per guest after products are priced.">
       {results.budget.status === 'pending' && <PendingState title="Not calculated yet" description="Budget totals require matched products and current prices." icon={ChartPie} />}
       <section className={styles.section} aria-labelledby="budget-summary">
         <h2 id="budget-summary">Summary</h2>

@@ -14,7 +14,7 @@ export function FinalSummaryPage() {
   const eventTitle = state.confirmedEvent.eventType ?? state.menu.title
 
   return (
-    <PlanPage title="Final event summary" subtitle="A clear view of what is ready and what still needs planning." backTo="/plan" backLabel="Back to plan overview">
+    <PlanPage title="Final event summary" subtitle="A clear view of what is ready and what still needs planning.">
       <Card className={styles.total}>
         <span>Event</span>
         <strong>{eventTitle}</strong>

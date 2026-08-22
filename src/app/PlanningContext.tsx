@@ -21,6 +21,7 @@ type PlanningAction =
   | { type: 'menuSuccess'; menu: EventMenu }
   | { type: 'menuError'; message: string }
   | { type: 'menuReset' }
+  | { type: 'basicsRegenerationStart'; event: EventInterpretation; interpretation: InterpretationField[] }
 
 interface PlanningContextValue {
   state: PlanningState
@@ -30,6 +31,7 @@ interface PlanningContextValue {
   updateField: (field: InterpretationField) => void
   generateConfirmedMenu: () => Promise<void>
   resetMenuGeneration: () => void
+  regeneratePlanWithBasics: (fields: InterpretationField[]) => Promise<void>
 }
 
 const initialState: PlanningState = {
@@ -41,6 +43,7 @@ const initialState: PlanningState = {
   menu: null,
   menuStatus: 'idle',
   menuError: null,
+  planInvalidatedByBrief: false,
 }
 
 function reducer(state: PlanningState, action: PlanningAction): PlanningState {
@@ -54,6 +57,7 @@ function reducer(state: PlanningState, action: PlanningAction): PlanningState {
         menu: null,
         menuStatus: 'idle',
         menuError: null,
+        planInvalidatedByBrief: state.planInvalidatedByBrief || Boolean(state.menu),
       }
     case 'interpretStart':
       return { ...state, interpretationStatus: 'loading', interpretationError: null }
@@ -95,11 +99,20 @@ function reducer(state: PlanningState, action: PlanningAction): PlanningState {
     case 'menuStart':
       return { ...state, menuStatus: 'loading', menuError: null }
     case 'menuSuccess':
-      return { ...state, menu: action.menu, menuStatus: 'success', menuError: null }
+      return { ...state, menu: action.menu, menuStatus: 'success', menuError: null, planInvalidatedByBrief: false }
     case 'menuError':
       return { ...state, menu: null, menuStatus: 'error', menuError: action.message }
     case 'menuReset':
       return { ...state, menuStatus: 'idle', menuError: null }
+    case 'basicsRegenerationStart':
+      return {
+        ...state,
+        confirmedEvent: action.event,
+        interpretation: action.interpretation,
+        menu: null,
+        menuStatus: 'loading',
+        menuError: null,
+      }
   }
 }
 
@@ -136,6 +149,21 @@ export function PlanningProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  async function regeneratePlanWithBasics(fields: InterpretationField[]) {
+    const event = fields.reduce(applyInterpretationFieldEdit, state.confirmedEvent)
+    dispatch({ type: 'basicsRegenerationStart', event, interpretation: fields })
+    try {
+      const menu = await generateMenu(event, state.brief)
+      dispatch({ type: 'menuSuccess', menu })
+    } catch (error) {
+      const message = error instanceof GenerateMenuServiceError
+        ? error.message
+        : 'Eventa could not regenerate the plan. Please try again.'
+      dispatch({ type: 'menuError', message })
+      throw error
+    }
+  }
+
   return (
     <PlanningContext.Provider
       value={{
@@ -146,6 +174,7 @@ export function PlanningProvider({ children }: { children: ReactNode }) {
         updateField: (field) => dispatch({ type: 'updateField', field }),
         generateConfirmedMenu,
         resetMenuGeneration: () => dispatch({ type: 'menuReset' }),
+        regeneratePlanWithBasics,
       }}
     >
       {children}

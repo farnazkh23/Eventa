@@ -17,7 +17,7 @@ export function ProductDetailPage() {
   if (!item) return <Navigate to="/plan/products" replace />
 
   return (
-    <PlanPage title="Product detail" subtitle="Matched packs and ordering details for this selection." backTo="/plan/products" backLabel="Back to products overview">
+    <PlanPage title="Product detail" subtitle="Matched packs and ordering details for this selection.">
       <p className={styles.detailName}>{item.name}</p>
       <PendingState title="Not matched yet" description="Product name, pack size, article number, quantity, and price will appear after matching." icon={Barcode} />
       <section className={styles.section} aria-labelledby="match-status">

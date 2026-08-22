@@ -15,7 +15,7 @@ export function QuantitiesPage() {
   const results = getPlanResults()
 
   return (
-    <PlanPage title="Quantity overview" subtitle="Review each menu selection once quantities have been calculated." backTo="/plan" backLabel="Back to plan overview">
+    <PlanPage title="Quantity overview" subtitle="Review each menu selection once quantities have been calculated.">
       {results.quantities.status === 'pending' && <PendingState title="Not calculated yet" description="Quantity calculations are waiting for backend planning data." icon={Scale} />}
       <section className={styles.section} aria-labelledby="quantity-items">
         <h2 id="quantity-items">Menu selections</h2>

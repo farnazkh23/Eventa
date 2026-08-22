@@ -1,4 +1,4 @@
-import { ArrowLeft, Scale } from 'lucide-react'
+import { Scale } from 'lucide-react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { menuCourses, type MenuCourse } from '../../../shared/menu'
 import { usePlanning } from '../../app/PlanningContext'
@@ -38,13 +38,7 @@ export function MenuPage() {
   return (
     <MobileShell compact contentMode="fixed" bottomNavigation={<BottomNavigation />}>
       <div className={styles.page}>
-        <MobileHeader
-          action={
-            <button type="button" className={styles.back} onClick={() => navigate('/plan')} aria-label="Back to plan overview">
-              <ArrowLeft size={25} strokeWidth={1.9} aria-hidden="true" />
-            </button>
-          }
-        />
+        <MobileHeader />
 
         <div className={styles.scrollArea} tabIndex={0} role="region" aria-label="Generated event menu">
           <header className={styles.header}>

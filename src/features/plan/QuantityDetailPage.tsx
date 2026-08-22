@@ -17,7 +17,7 @@ export function QuantityDetailPage() {
   if (!item) return <Navigate to="/plan/quantities" replace />
 
   return (
-    <PlanPage title="Quantity detail" subtitle="Calculation details for this menu selection." backTo="/plan/quantities" backLabel="Back to quantity overview">
+    <PlanPage title="Quantity detail" subtitle="Calculation details for this menu selection.">
       <p className={styles.detailName}>{item.name}</p>
       <PendingState title="Not calculated yet" description="Servings, total amount, and calculation assumptions will appear here when available." icon={Calculator} />
       <section className={styles.section} aria-labelledby="quantity-breakdown">

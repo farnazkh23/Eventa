@@ -67,7 +67,11 @@
 }
 
 .eventHeader {
-  margin: 0.75rem 0 1.55rem;
+  margin: 0.75rem 0 1rem;
+}
+
+.basics {
+  margin-bottom: 1rem;
 }
 
 .eventHeader h1 {

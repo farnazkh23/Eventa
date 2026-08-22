@@ -1,4 +1,4 @@
-import { Check, HandPlatter, Package, Scale, ShoppingCart, WalletCards } from 'lucide-react'
+import { Check, HandPlatter, Package, Scale, ShoppingCart, SlidersHorizontal, WalletCards } from 'lucide-react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { usePlanning } from '../../app/PlanningContext'
 import { BottomNavigation } from '../../components/layout/BottomNavigation'
@@ -6,6 +6,7 @@ import { MobileHeader } from '../../components/layout/MobileHeader'
 import { MobileShell } from '../../components/layout/MobileShell'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
+import { PlanListItem } from '../../components/ui/PlanListItem'
 import { PlanSummaryCard } from './PlanSummaryCard'
 import styles from './PlanOverviewPage.module.css'
 
@@ -46,6 +47,20 @@ export function PlanOverviewPage() {
               ))}
             </p>
           </header>
+
+          <div className={styles.basics}>
+            <PlanListItem
+              title="My Basics"
+              detail={[
+                confirmedEvent.guestCount ? `${confirmedEvent.guestCount} guests` : null,
+                confirmedEvent.location,
+                confirmedEvent.serviceStyle ?? confirmedEvent.mealType,
+              ].filter(Boolean).join(' · ') || 'Review event details'}
+              icon={SlidersHorizontal}
+              onClick={() => navigate('/plan/basics')}
+              ariaLabel="Review My Basics"
+            />
+          </div>
 
           <Card tone="success" className={styles.ready} role="status">
             <span className={styles.check}><Check size={31} strokeWidth={2.2} aria-hidden="true" /></span>

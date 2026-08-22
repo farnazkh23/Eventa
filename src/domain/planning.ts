@@ -30,4 +30,5 @@ export interface PlanningState {
   menu: EventMenu | null
   menuStatus: 'idle' | 'loading' | 'success' | 'error'
   menuError: string | null
+  planInvalidatedByBrief: boolean
 }
