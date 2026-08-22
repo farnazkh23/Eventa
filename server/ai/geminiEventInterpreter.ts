@@ -1,4 +1,4 @@
-import { ApiError, GoogleGenAI } from '@google/genai'
+import { GoogleGenAI } from '@google/genai'
 import type { EventInterpretation } from '../../shared/eventInterpretation.js'
 import type { EventInterpreter } from './eventInterpreter.js'
 import {
@@ -6,6 +6,7 @@ import {
   eventInterpretationSchema,
 } from '../schemas/eventInterpretation.js'
 import { normalizeEventInterpretation } from '../schemas/normalizeEventInterpretation.js'
+import { generateStructuredJson } from './gemini.js'
 
 const SYSTEM_INSTRUCTION = `You are Eventa's event and catering brief extractor.
 Extract only facts supported by the user's description. Never infer or invent missing facts.
@@ -16,12 +17,6 @@ Keep location natural and human-readable.
 Normalize dietaryRequirements to concise lowercase terms such as "vegetarian", "vegan", and "gluten-free".
 Put relevant requirements that do not fit another field into additionalNotes.
 Do not provide advice, menus, quantities, product recommendations, calculations, or conversational text.`
-
-const MAX_TRANSIENT_RETRIES = 2
-
-function delay(milliseconds: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, milliseconds))
-}
 
 export class GeminiEventInterpreter implements EventInterpreter {
   private readonly client: GoogleGenAI
@@ -34,33 +29,13 @@ export class GeminiEventInterpreter implements EventInterpreter {
   }
 
   async interpret(description: string): Promise<EventInterpretation> {
-    let response
-
-    for (let attempt = 0; ; attempt += 1) {
-      try {
-        response = await this.client.models.generateContent({
-          model: this.model,
-          contents: description,
-          config: {
-            systemInstruction: SYSTEM_INSTRUCTION,
-            temperature: 0.1,
-            responseMimeType: 'application/json',
-            responseJsonSchema: eventInterpretationJsonSchema,
-          },
-        })
-        break
-      } catch (error) {
-        const isTransient = error instanceof ApiError && (error.status === 429 || error.status === 503)
-        if (!isTransient || attempt >= MAX_TRANSIENT_RETRIES) throw error
-        await delay(500 * 2 ** attempt)
-      }
-    }
-
-    if (!response.text) {
-      throw new Error('Gemini returned an empty structured response')
-    }
-
-    const parsedJson: unknown = JSON.parse(response.text)
+    const parsedJson = await generateStructuredJson({
+      client: this.client,
+      model: this.model,
+      contents: description,
+      systemInstruction: SYSTEM_INSTRUCTION,
+      responseJsonSchema: eventInterpretationJsonSchema,
+    })
     const validated = eventInterpretationSchema.parse(parsedJson)
     return normalizeEventInterpretation(validated)
   }

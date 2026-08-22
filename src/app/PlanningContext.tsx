@@ -1,16 +1,26 @@
 import { createContext, useContext, useReducer, type ReactNode } from 'react'
 import type { InterpretationField, PlanningState } from '../domain/planning'
-import { toInterpretationFields, emptyEventInterpretation } from '../services/eventInterpretationMapper'
+import {
+  applyInterpretationFieldEdit,
+  toInterpretationFields,
+  emptyEventInterpretation,
+} from '../services/eventInterpretationMapper'
 import { interpretEvent, InterpretEventServiceError } from '../services/interpretEvent'
-import { mockPlan } from '../services/mockPlanningService'
+import { generateMenu, GenerateMenuServiceError } from '../services/generateMenu'
+import type { EventInterpretation } from '../../shared/eventInterpretation'
+import type { EventMenu } from '../../shared/menu'
 
 type PlanningAction =
   | { type: 'setBrief'; brief: string }
   | { type: 'interpretStart' }
-  | { type: 'interpretSuccess'; interpretation: InterpretationField[] }
+  | { type: 'interpretSuccess'; event: EventInterpretation; interpretation: InterpretationField[] }
   | { type: 'interpretError'; message: string }
   | { type: 'startManualEntry' }
   | { type: 'updateField'; field: InterpretationField }
+  | { type: 'menuStart' }
+  | { type: 'menuSuccess'; menu: EventMenu }
+  | { type: 'menuError'; message: string }
+  | { type: 'menuReset' }
 
 interface PlanningContextValue {
   state: PlanningState
@@ -18,14 +28,19 @@ interface PlanningContextValue {
   interpretBrief: () => Promise<void>
   startManualEntry: () => void
   updateField: (field: InterpretationField) => void
+  generateConfirmedMenu: () => Promise<void>
+  resetMenuGeneration: () => void
 }
 
 const initialState: PlanningState = {
   brief: '',
+  confirmedEvent: emptyEventInterpretation,
   interpretation: toInterpretationFields(emptyEventInterpretation),
   interpretationStatus: 'idle',
   interpretationError: null,
-  plan: mockPlan,
+  menu: null,
+  menuStatus: 'idle',
+  menuError: null,
 }
 
 function reducer(state: PlanningState, action: PlanningAction): PlanningState {
@@ -36,32 +51,55 @@ function reducer(state: PlanningState, action: PlanningAction): PlanningState {
         brief: action.brief,
         interpretationStatus: state.interpretationStatus === 'error' ? 'idle' : state.interpretationStatus,
         interpretationError: null,
+        menu: null,
+        menuStatus: 'idle',
+        menuError: null,
       }
     case 'interpretStart':
       return { ...state, interpretationStatus: 'loading', interpretationError: null }
     case 'interpretSuccess':
       return {
         ...state,
+        confirmedEvent: action.event,
         interpretation: action.interpretation,
         interpretationStatus: 'success',
         interpretationError: null,
+        menu: null,
+        menuStatus: 'idle',
+        menuError: null,
       }
     case 'interpretError':
       return { ...state, interpretationStatus: 'error', interpretationError: action.message }
     case 'startManualEntry':
       return {
         ...state,
+        confirmedEvent: emptyEventInterpretation,
         interpretation: toInterpretationFields(emptyEventInterpretation),
         interpretationStatus: 'success',
         interpretationError: null,
+        menu: null,
+        menuStatus: 'idle',
+        menuError: null,
       }
     case 'updateField':
       return {
         ...state,
+        confirmedEvent: applyInterpretationFieldEdit(state.confirmedEvent, action.field),
         interpretation: state.interpretation.map((field) =>
           field.id === action.field.id ? action.field : field,
         ),
+        menu: null,
+        menuStatus: 'idle',
+        menuError: null,
       }
+    case 'menuStart':
+      return { ...state, menuStatus: 'loading', menuError: null }
+    case 'menuSuccess':
+      return { ...state, menu: action.menu, menuStatus: 'success', menuError: null }
+    case 'menuError':
+      return { ...state, menu: null, menuStatus: 'error', menuError: action.message }
+    case 'menuReset':
+      return { ...state, menuStatus: 'idle', menuError: null }
   }
 }
 
@@ -74,12 +112,26 @@ export function PlanningProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'interpretStart' })
     try {
       const result = await interpretEvent(state.brief)
-      dispatch({ type: 'interpretSuccess', interpretation: toInterpretationFields(result) })
+      dispatch({ type: 'interpretSuccess', event: result, interpretation: toInterpretationFields(result) })
     } catch (error) {
       const message = error instanceof InterpretEventServiceError
         ? error.message
         : 'Eventa could not interpret this event. Please try again.'
       dispatch({ type: 'interpretError', message })
+      throw error
+    }
+  }
+
+  async function generateConfirmedMenu() {
+    dispatch({ type: 'menuStart' })
+    try {
+      const menu = await generateMenu(state.confirmedEvent, state.brief)
+      dispatch({ type: 'menuSuccess', menu })
+    } catch (error) {
+      const message = error instanceof GenerateMenuServiceError
+        ? error.message
+        : 'Eventa could not create the menu. Please try again.'
+      dispatch({ type: 'menuError', message })
       throw error
     }
   }
@@ -92,6 +144,8 @@ export function PlanningProvider({ children }: { children: ReactNode }) {
         interpretBrief,
         startManualEntry: () => dispatch({ type: 'startManualEntry' }),
         updateField: (field) => dispatch({ type: 'updateField', field }),
+        generateConfirmedMenu,
+        resetMenuGeneration: () => dispatch({ type: 'menuReset' }),
       }}
     >
       {children}

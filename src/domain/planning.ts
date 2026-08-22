@@ -1,3 +1,6 @@
+import type { EventInterpretation } from '../../shared/eventInterpretation'
+import type { EventMenu } from '../../shared/menu'
+
 export type InterpretationFieldId =
   | 'eventType'
   | 'guestCount'
@@ -18,23 +21,13 @@ export interface InterpretationField {
   editable: boolean
 }
 
-export interface EventPlanSummary {
-  title: string
-  guestCount: number
-  location: string
-  date: string
-  menu: string[]
-  foodKg: number
-  beveragesLitres: number
-  productCount: number
-  totalCost: number
-  budgetPerGuest: number
-}
-
 export interface PlanningState {
   brief: string
+  confirmedEvent: EventInterpretation
   interpretation: InterpretationField[]
   interpretationStatus: 'idle' | 'loading' | 'success' | 'error'
   interpretationError: string | null
-  plan: EventPlanSummary
+  menu: EventMenu | null
+  menuStatus: 'idle' | 'loading' | 'success' | 'error'
+  menuError: string | null
 }

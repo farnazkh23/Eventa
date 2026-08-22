@@ -53,6 +53,47 @@ export function toInterpretationFields(data: EventInterpretation): Interpretatio
   ]
 }
 
+function optionalText(value: string): string | null {
+  return value.trim() || null
+}
+
+function optionalNumber(value: string): number | null {
+  const match = value.replace(/[’']/g, '').match(/\d+(?:[.,]\d+)?/)
+  if (!match) return null
+  const parsed = Number(match[0].replace(',', '.'))
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : null
+}
+
+function listValues(value: string): string[] {
+  return value
+    .split(/[,;]/)
+    .map((item) => item.trim())
+    .filter(Boolean)
+}
+
+export function applyInterpretationFieldEdit(
+  event: EventInterpretation,
+  field: InterpretationField,
+): EventInterpretation {
+  switch (field.id) {
+    case 'eventType':
+    case 'location':
+    case 'date':
+    case 'time':
+    case 'mealType':
+    case 'serviceStyle':
+      return { ...event, [field.id]: optionalText(field.value) }
+    case 'guestCount':
+      return { ...event, guestCount: optionalNumber(field.value) }
+    case 'budgetPerGuest':
+    case 'totalBudget':
+      return { ...event, [field.id]: optionalNumber(field.value) }
+    case 'dietaryRequirements':
+    case 'additionalNotes':
+      return { ...event, [field.id]: listValues(field.value) }
+  }
+}
+
 export const emptyEventInterpretation: EventInterpretation = {
   eventType: null,
   guestCount: null,

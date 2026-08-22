@@ -8,6 +8,7 @@ interface PlanSummaryCardProps {
   title: string
   children: React.ReactNode
   ariaLabel: string
+  onClick?: () => void
 }
 
 export function PlanSummaryCard({
@@ -16,9 +17,16 @@ export function PlanSummaryCard({
   title,
   children,
   ariaLabel,
+  onClick,
 }: PlanSummaryCardProps) {
   return (
-    <button type="button" className={styles.card} aria-label={ariaLabel}>
+    <button
+      type="button"
+      className={styles.card}
+      aria-label={ariaLabel}
+      onClick={onClick}
+      disabled={!onClick}
+    >
       <IconContainer size="large" tone={iconTone}>
         <Icon size={30} strokeWidth={1.75} aria-hidden="true" />
       </IconContainer>
@@ -26,7 +34,7 @@ export function PlanSummaryCard({
         <strong>{title}</strong>
         {children}
       </span>
-      <ChevronRight className={styles.chevron} size={24} strokeWidth={1.7} aria-hidden="true" />
+      {onClick && <ChevronRight className={styles.chevron} size={24} strokeWidth={1.7} aria-hidden="true" />}
     </button>
   )
 }

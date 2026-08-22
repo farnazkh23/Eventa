@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { toGeminiJsonSchema } from './geminiJsonSchema.js'
 
 const nullableText = z.string().trim().min(1).max(300).nullable()
 const nullableMoney = z.number().finite().nonnegative().max(10_000_000).nullable()
@@ -27,6 +28,6 @@ export const eventInterpretationSchema = z
 
 export type ValidatedEventInterpretation = z.infer<typeof eventInterpretationSchema>
 
-export const eventInterpretationJsonSchema = z.toJSONSchema(eventInterpretationSchema, {
-  target: 'draft-7',
-})
+export const eventInterpretationJsonSchema = toGeminiJsonSchema(
+  z.toJSONSchema(eventInterpretationSchema, { target: 'draft-7' }),
+)

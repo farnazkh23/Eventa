@@ -33,3 +33,17 @@ npm run verify:ai
 ```
 
 This command prints only the descriptions and validated extraction results. It never prints the API key.
+
+Run all approved live menu scenarios, with rate-limit-aware spacing:
+
+```powershell
+npm run verify:menus
+```
+
+Run one menu scenario independently when checking quota recovery:
+
+```powershell
+npm run verify:menus -- A
+npm run verify:menus -- B
+npm run verify:menus -- C
+```

@@ -20,6 +20,7 @@ import { Button } from '../../components/ui/Button'
 import { ProgressIndicator } from '../../components/ui/ProgressIndicator'
 import type { InterpretationFieldId } from '../../domain/planning'
 import { EditableDetail } from './EditableDetail'
+import { MenuGenerationState } from '../plan/MenuGenerationState'
 import styles from './InterpretationPage.module.css'
 
 const fieldIcons: Record<InterpretationFieldId, LucideIcon> = {
@@ -38,11 +39,35 @@ const fieldIcons: Record<InterpretationFieldId, LucideIcon> = {
 
 export function InterpretationPage() {
   const navigate = useNavigate()
-  const { state, updateField } = usePlanning()
+  const {
+    state,
+    updateField,
+    generateConfirmedMenu,
+    resetMenuGeneration,
+  } = usePlanning()
+
+  async function handleGenerateMenu() {
+    try {
+      await generateConfirmedMenu()
+      navigate('/plan')
+    } catch {
+      // PlanningContext exposes the safe menu error rendered below.
+    }
+  }
 
   function focusFirstEditControl() {
     const firstEditButton = document.querySelector<HTMLButtonElement>('button[aria-label^="Edit"]')
     firstEditButton?.focus()
+  }
+
+  if (state.menuStatus === 'loading' || state.menuStatus === 'error') {
+    return (
+      <MenuGenerationState
+        error={state.menuError}
+        onRetry={() => void handleGenerateMenu()}
+        onBack={resetMenuGeneration}
+      />
+    )
   }
 
   return (
@@ -76,7 +101,7 @@ export function InterpretationPage() {
 
         <div className={styles.actions}>
           <AiNote>You can change anything before Eventa creates your plan.</AiNote>
-          <Button type="button" fullWidth onClick={() => navigate('/plan')}>Looks good</Button>
+          <Button type="button" fullWidth onClick={() => void handleGenerateMenu()}>Looks good</Button>
           <Button type="button" variant="text" onClick={focusFirstEditControl}>
             Edit details
           </Button>

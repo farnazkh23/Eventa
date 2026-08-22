@@ -1,0 +1,114 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.content {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  flex-direction: column;
+  justify-content: center;
+  padding-block: 1.75rem;
+}
+
+.heading h1 {
+  margin: 0;
+  font-size: clamp(2.1rem, 9.5vw, 2.55rem);
+  font-weight: 720;
+  letter-spacing: -0.04em;
+  line-height: 1.08;
+}
+
+.heading p {
+  margin: 0.8rem 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.98rem;
+  line-height: 1.5;
+}
+
+.steps {
+  display: grid;
+  gap: 0.55rem;
+  margin: 2rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.steps li {
+  display: grid;
+  grid-template-columns: 42px 1fr;
+  align-items: center;
+  min-height: 56px;
+  gap: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.steps li > span {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 50%;
+  background: #eef1f5;
+}
+
+.steps .complete {
+  color: var(--color-text);
+}
+
+.steps .complete > span {
+  color: var(--color-success);
+  background: var(--color-success-soft);
+}
+
+.steps .active {
+  color: var(--color-text);
+  font-weight: 650;
+}
+
+.steps .active > span {
+  color: var(--color-brand);
+  background: var(--color-brand-soft);
+}
+
+.steps .active svg {
+  animation: spin 1.25s linear infinite;
+}
+
+.steps .failed > span {
+  color: var(--color-brand);
+  background: var(--color-brand-soft);
+}
+
+.error {
+  margin: 1.3rem 0 0;
+  padding: 0.9rem 1rem;
+  border-radius: var(--radius-sm);
+  color: #9d1534;
+  background: var(--color-brand-soft);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.actions {
+  display: grid;
+  flex: 0 0 auto;
+  gap: 0.85rem;
+}
+
+.actions > :last-child {
+  justify-self: center;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .steps .active svg {
+    animation: none;
+  }
+}

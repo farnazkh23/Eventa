@@ -20,6 +20,15 @@
   background: #fff;
 }
 
+.card:disabled {
+  cursor: default;
+  opacity: 1;
+}
+
+.card:disabled:hover {
+  background: rgba(255, 255, 255, 0.88);
+}
+
 .card:active {
   transform: scale(0.99);
 }
