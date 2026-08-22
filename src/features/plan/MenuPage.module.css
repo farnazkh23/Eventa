@@ -162,6 +162,10 @@
   line-height: 1.45;
 }
 
+.action {
+  margin-top: 1.5rem;
+}
+
 @media (pointer: coarse) {
   .scrollArea {
     scrollbar-width: none;

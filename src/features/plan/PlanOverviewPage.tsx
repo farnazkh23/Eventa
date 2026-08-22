@@ -28,7 +28,7 @@ export function PlanOverviewPage() {
       <div className={styles.page}>
         <MobileHeader
           action={
-            <button type="button" className={styles.cart} aria-label="Shopping cart not available yet" disabled>
+            <button type="button" className={styles.cart} aria-label="Open shopping list" onClick={() => navigate('/plan/shopping-list')}>
               <ShoppingCart size={29} strokeWidth={1.8} aria-hidden="true" />
             </button>
           }
@@ -66,18 +66,18 @@ export function PlanOverviewPage() {
               <span>{menu.items.length} selections</span>
               <small>{menu.items.slice(0, 4).map((item) => item.name).join(', ')}</small>
             </PlanSummaryCard>
-            <PlanSummaryCard icon={Scale} iconTone="blue" title="Quantities" ariaLabel="Quantities not calculated yet">
+            <PlanSummaryCard icon={Scale} iconTone="blue" title="Quantities" ariaLabel="Open quantity overview" onClick={() => navigate('/plan/quantities')}>
               <span>Not calculated yet</span>
             </PlanSummaryCard>
-            <PlanSummaryCard icon={Package} iconTone="rose" title="Transgourmet products" ariaLabel="Products not matched yet">
+            <PlanSummaryCard icon={Package} iconTone="rose" title="Transgourmet products" ariaLabel="Open products overview" onClick={() => navigate('/plan/products')}>
               <span>Not matched yet</span>
             </PlanSummaryCard>
-            <PlanSummaryCard icon={WalletCards} iconTone="green" title="Budget" ariaLabel="Budget calculated after product matching">
+            <PlanSummaryCard icon={WalletCards} iconTone="green" title="Budget" ariaLabel="Open budget" onClick={() => navigate('/plan/budget')}>
               <span>Calculated after product matching</span>
             </PlanSummaryCard>
           </section>
 
-          <Button type="button" fullWidth className={styles.review} onClick={() => navigate('/plan/menu')}>View menu</Button>
+          <Button type="button" fullWidth className={styles.review} onClick={() => navigate('/plan/shopping-list')}>Review shopping list</Button>
         </div>
       </div>
     </MobileShell>

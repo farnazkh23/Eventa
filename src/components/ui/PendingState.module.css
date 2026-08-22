@@ -1,0 +1,5 @@
+.state { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 1rem; padding: 1.15rem; }
+.state > span:last-child { display: grid; gap: .3rem; }
+.state strong { font-size: 1rem; }
+.state small { color: var(--color-text-muted); font-size: .85rem; line-height: 1.45; }
+.icon { display: grid; width: 50px; height: 50px; place-items: center; border-radius: var(--radius-sm); color: var(--color-brand); background: var(--color-brand-soft); }

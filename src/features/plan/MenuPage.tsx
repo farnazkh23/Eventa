@@ -6,6 +6,7 @@ import { BottomNavigation } from '../../components/layout/BottomNavigation'
 import { MobileHeader } from '../../components/layout/MobileHeader'
 import { MobileShell } from '../../components/layout/MobileShell'
 import { Card } from '../../components/ui/Card'
+import { Button } from '../../components/ui/Button'
 import styles from './MenuPage.module.css'
 
 const courseLabels: Record<MenuCourse, string> = {
@@ -90,6 +91,7 @@ export function MenuPage() {
               </ul>
             </Card>
           )}
+          <Button type="button" fullWidth className={styles.action} onClick={() => navigate('/plan/quantities')}>View quantities</Button>
         </div>
       </div>
     </MobileShell>

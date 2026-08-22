@@ -1,0 +1,9 @@
+.item { display: grid; grid-template-columns: auto minmax(0,1fr) auto; align-items: center; width: 100%; min-height: 76px; gap: .85rem; padding: .9rem 1rem; border: 0; border-radius: var(--radius-md); color: var(--color-text); text-align: left; background: rgba(255,255,255,.88); box-shadow: 0 8px 20px rgba(65,77,104,.06); }
+button.item { cursor: pointer; transition: transform 160ms ease, background-color 160ms ease; }
+button.item:hover { background: #fff; }
+button.item:active { transform: scale(.99); }
+.icon { display: grid; width: 44px; height: 44px; place-items: center; border-radius: var(--radius-sm); color: var(--color-text); background: var(--color-surface-soft); }
+.copy { display: grid; min-width: 0; gap: .24rem; }
+.copy strong { font-size: .95rem; line-height: 1.3; }
+.copy small { color: var(--color-text-muted); font-size: .8rem; line-height: 1.4; }
+.chevron { color: var(--color-text-muted); }

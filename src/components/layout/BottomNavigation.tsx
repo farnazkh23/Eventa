@@ -10,14 +10,14 @@ export function BottomNavigation() {
   const items = [
     { label: 'Overview', icon: LayoutDashboard, path: '/plan', enabled: Boolean(state.menu) },
     { label: 'Menu', icon: Utensils, path: '/plan/menu', enabled: Boolean(state.menu) },
-    { label: 'Products', icon: Package, path: null, enabled: false },
-    { label: 'Budget', icon: ChartPie, path: null, enabled: false },
+    { label: 'Products', icon: Package, path: '/plan/products', enabled: Boolean(state.menu) },
+    { label: 'Budget', icon: ChartPie, path: '/plan/budget', enabled: Boolean(state.menu) },
   ]
 
   return (
     <nav className={styles.nav} aria-label="Plan sections">
       {items.map(({ label, icon: Icon, path, enabled }) => {
-        const active = path === location.pathname
+        const active = Boolean(path && (location.pathname === path || location.pathname.startsWith(`${path}/`)))
         return (
         <button
           key={label}
