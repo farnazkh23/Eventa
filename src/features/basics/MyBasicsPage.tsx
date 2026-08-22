@@ -18,7 +18,7 @@ export function MyBasicsPage() {
 
   function persist(next: PantryBasic[]) {
     if (!savePantryBasics(next)) {
-      setError('My Basics could not be saved in this browser.')
+      setError('My essentials could not be saved in this browser.')
       return false
     }
     setItems(next)
@@ -40,14 +40,14 @@ export function MyBasicsPage() {
   }
 
   return (
-    <PlanPage title="My Basics" subtitle="Keep track of products and ingredients you regularly have or buy.">
+    <PlanPage title="My essentials" subtitle="Keep track of products and ingredients you regularly have or buy.">
       <Card className={styles.formCard}>
         <form onSubmit={addItem}>
           <label>
             Add a usual stock item
             <input value={name} maxLength={80} onChange={(event) => setName(event.target.value)} placeholder="Olive oil" />
           </label>
-          <Button type="submit" fullWidth disabled={!name.trim()}><Plus size={19} aria-hidden="true" /> Add basic</Button>
+          <Button type="submit" fullWidth disabled={!name.trim()}><Plus size={19} aria-hidden="true" /> Add essential</Button>
         </form>
         {error && <p className={styles.error} role="alert">{error}</p>}
       </Card>
@@ -55,7 +55,7 @@ export function MyBasicsPage() {
       <section className={styles.section} aria-labelledby="usual-items">
         <h2 id="usual-items">Usual stock items</h2>
         {items.length === 0 ? (
-          <PendingState title="No basics added yet" description="Add products or ingredients you regularly keep in stock." icon={PackageOpen} />
+          <PendingState title="No essentials added yet" description="Add products or ingredients you regularly keep in stock." icon={PackageOpen} />
         ) : (
           <div className={styles.list}>
             {items.map((item) => (

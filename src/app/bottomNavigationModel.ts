@@ -1,4 +1,4 @@
-export type BottomNavigationItem = 'Overview' | 'New Plan' | 'Templates' | 'My Basics'
+export type BottomNavigationItem = 'Overview' | 'New Plan' | 'Templates' | 'My essentials'
 
 export function isBottomNavigationItemActive(item: BottomNavigationItem, pathname: string) {
   switch (item) {
@@ -8,7 +8,7 @@ export function isBottomNavigationItemActive(item: BottomNavigationItem, pathnam
       return pathname === '/' || pathname === '/interpretation'
     case 'Templates':
       return pathname === '/templates'
-    case 'My Basics':
+    case 'My essentials':
       return pathname === '/basics'
   }
 }

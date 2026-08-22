@@ -14,7 +14,7 @@ export function BottomNavigation() {
     { label: 'Overview' as const, icon: LayoutDashboard, path: '/plan', action: false },
     { label: 'New Plan' as const, icon: FilePlus2, path: null, action: true },
     { label: 'Templates' as const, icon: LayoutTemplate, path: '/templates', action: false },
-    { label: 'My Basics' as const, icon: PackageOpen, path: '/basics', action: false },
+    { label: 'My essentials' as const, icon: PackageOpen, path: '/basics', action: false },
   ]
 
   function startNewPlan() {

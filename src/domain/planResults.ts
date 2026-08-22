@@ -90,9 +90,13 @@ export function formatQuantity(amount: number, unit: QuantityUnit) {
 
 export function allocationLabel(allocation: ItemAllocation | undefined) {
   if (!allocation) return 'Unresolved'
+  if (allocation.plannedServings !== null) {
+    return allocation.status === 'calculated'
+      ? `${allocation.plannedServings} servings`
+      : `${allocation.plannedServings} servings · ingredient data incomplete`
+  }
   if (allocation.status === 'needs_confirmation') return 'Needs confirmation'
-  if (allocation.status === 'missing_quantity_data') return 'Quantity data unresolved'
-  return allocation.plannedServings === null ? 'Unresolved' : `${allocation.plannedServings} servings`
+  return 'Quantity data unresolved'
 }
 
 export function productStatusLabel(status: ProductMatchStatus) {

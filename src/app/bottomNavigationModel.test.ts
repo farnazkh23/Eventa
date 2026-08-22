@@ -11,12 +11,12 @@ const cases: Array<[string, BottomNavigationItem]> = [
   ['/plan/products', 'Overview'],
   ['/plan/budget', 'Overview'],
   ['/templates', 'Templates'],
-  ['/basics', 'My Basics'],
+  ['/basics', 'My essentials'],
 ]
 
 describe('bottom navigation active state', () => {
   it.each(cases)('marks %s as %s', (pathname, expected) => {
-    const items: BottomNavigationItem[] = ['Overview', 'New Plan', 'Templates', 'My Basics']
+    const items: BottomNavigationItem[] = ['Overview', 'New Plan', 'Templates', 'My essentials']
     expect(items.filter((item) => isBottomNavigationItemActive(item, pathname))).toEqual([expected])
   })
 })

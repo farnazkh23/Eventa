@@ -14,12 +14,13 @@ export function QuantitiesPage() {
   if (!state.menu) return <Navigate to="/interpretation" replace />
   const plan = state.quantityPlan
   const calculated = plan?.itemAllocations.filter((item) => item.status === 'calculated').length ?? 0
+  const needsConfirmation = plan?.itemAllocations.filter((item) => item.status === 'needs_confirmation' && item.plannedServings === null).length ?? 0
 
   return (
     <PlanPage title="Quantity overview" subtitle="Calculated requirements for the confirmed menu and guest count.">
       {state.quantityStatus === 'loading' && <PendingState title="Calculating quantities" description="Eventa is calculating servings and ingredient requirements." icon={LoaderCircle} />}
       {state.quantityStatus === 'error' && <div className={styles.stateBlock}><PendingState title="Quantity calculation failed" description={state.quantityError ?? 'Please try again.'} icon={AlertTriangle} /><Button fullWidth type="button" onClick={() => void retryQuantities()}>Retry calculation</Button></div>}
-      {state.quantityStatus === 'success' && plan && <PendingState title={plan.isComplete ? 'Quantities complete' : calculated > 0 ? 'Quantities need confirmation' : 'Quantities unresolved'} description={plan.isComplete ? `${plan.itemAllocations.length} menu selections calculated.` : `${calculated} of ${plan.itemAllocations.length} selections calculated. Review unresolved items below.`} icon={plan.isComplete ? CheckCircle2 : AlertTriangle} />}
+      {state.quantityStatus === 'success' && plan && <PendingState title={plan.isComplete ? 'Quantities complete' : needsConfirmation ? `${needsConfirmation} serving allocation${needsConfirmation === 1 ? '' : 's'} need confirmation` : calculated > 0 ? 'Some ingredient quantities are unresolved' : 'Quantities unresolved'} description={plan.isComplete ? `${plan.itemAllocations.length} menu selections calculated.` : needsConfirmation ? 'Confirm the guest count for each option. Calculated quantities remain available below.' : `${calculated} of ${plan.itemAllocations.length} selections have serving allocations.`} icon={plan.isComplete ? CheckCircle2 : AlertTriangle} />}
       <section className={styles.section} aria-labelledby="quantity-items">
         <h2 id="quantity-items">Menu selections</h2>
         <div className={styles.stack}>

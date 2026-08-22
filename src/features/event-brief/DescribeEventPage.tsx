@@ -7,7 +7,7 @@ import { AiNote } from '../../components/ui/AiNote'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
 import { TextAreaField } from '../../components/ui/TextAreaField'
-import { sampleBrief } from '../../services/mockPlanningService'
+import { demoBrief, sampleBrief } from '../../services/mockPlanningService'
 import styles from './DescribeEventPage.module.css'
 
 export function DescribeEventPage() {
@@ -51,17 +51,30 @@ export function DescribeEventPage() {
           handleContinue()
         }}
       >
-        <TextAreaField
-          id="event-description"
-          label="Describe your event"
-          maxLength={1000}
-          value={state.brief}
-          placeholder={sampleBrief}
-          onChange={(event) => setBrief(event.target.value)}
-          disabled={isLoading}
-          required
-          aria-describedby="event-description-help"
-        />
+        <div className={styles.description}>
+          <TextAreaField
+            id="event-description"
+            label="Describe your event"
+            maxLength={1000}
+            value={state.brief}
+            placeholder={sampleBrief}
+            onChange={(event) => setBrief(event.target.value)}
+            disabled={isLoading}
+            required
+            aria-describedby="event-description-help"
+          />
+          <button
+            type="button"
+            className={styles.example}
+            onClick={() => {
+              setBrief(demoBrief)
+              requestAnimationFrame(focusDescription)
+            }}
+            disabled={isLoading}
+          >
+            Use example
+          </button>
+        </div>
         {hasError ? (
           <Card className={styles.error} role="alert">
             <AlertCircle size={24} strokeWidth={1.9} aria-hidden="true" />

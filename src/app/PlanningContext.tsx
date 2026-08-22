@@ -7,7 +7,7 @@ import {
 } from '../services/eventInterpretationMapper'
 import { interpretEvent, InterpretEventServiceError } from '../services/interpretEvent'
 import { generateMenu, GenerateMenuServiceError } from '../services/generateMenu'
-import { calculateQuantities, matchProducts, PlanResultsServiceError } from '../services/planResults'
+import { calculateQuantities, createPurchasingPlan, matchProducts, PlanResultsServiceError } from '../services/planResults'
 import type { ProductMatchPlan, QuantityPlan } from '../domain/planResults'
 import type { EventMenu } from '../../shared/menu'
 
@@ -25,9 +25,13 @@ type PlanningAction =
   | { type: 'quantityStart' }
   | { type: 'quantitySuccess'; plan: QuantityPlan }
   | { type: 'quantityError'; message: string }
+  | { type: 'servingOverridesSet'; overrides: Record<string, number> }
   | { type: 'productStart' }
   | { type: 'productSuccess'; plan: ProductMatchPlan }
   | { type: 'productError'; message: string }
+  | { type: 'purchasingStart' }
+  | { type: 'purchasingSuccess' }
+  | { type: 'purchasingError'; message: string }
   | { type: 'basicsRegenerationStart'; event: PlanningEventInterpretation; interpretation: InterpretationField[] }
   | { type: 'resetPlan' }
   | { type: 'loadTemplate'; event: PlanningEventInterpretation; brief: string; interpretation: InterpretationField[] }
@@ -38,10 +42,12 @@ interface PlanningContextValue {
   interpretBrief: () => Promise<void>
   startManualEntry: () => void
   updateField: (field: InterpretationField) => void
-  generateConfirmedMenu: () => Promise<void>
+  generateConfirmedMenu: () => Promise<boolean>
+  retryFailedPlanningPhase: () => Promise<boolean>
   resetMenuGeneration: () => void
   retryQuantities: () => Promise<void>
   retryProducts: () => Promise<void>
+  confirmServingAllocation: (menuItemId: string, servings: number) => Promise<void>
   regeneratePlanWithBasics: (fields: InterpretationField[]) => Promise<void>
   resetPlan: () => void
   loadTemplate: (event: PlanningEventInterpretation, brief: string) => void
@@ -59,9 +65,14 @@ const initialState: PlanningState = {
   quantityPlan: null,
   quantityStatus: 'idle',
   quantityError: null,
+  servingOverrides: {},
   productPlan: null,
   productStatus: 'idle',
   productError: null,
+  purchasingStatus: 'idle',
+  purchasingError: null,
+  planningPhase: 'understanding_event',
+  failedPlanningPhase: null,
   planInvalidatedByBrief: false,
 }
 
@@ -79,13 +90,18 @@ function reducer(state: PlanningState, action: PlanningAction): PlanningState {
         quantityPlan: null,
         quantityStatus: 'idle',
         quantityError: null,
+        servingOverrides: {},
         productPlan: null,
         productStatus: 'idle',
         productError: null,
+        purchasingStatus: 'idle',
+        purchasingError: null,
+        planningPhase: 'understanding_event',
+        failedPlanningPhase: null,
         planInvalidatedByBrief: state.planInvalidatedByBrief || Boolean(state.menu),
       }
     case 'interpretStart':
-      return { ...state, interpretationStatus: 'loading', interpretationError: null }
+      return { ...state, interpretationStatus: 'loading', interpretationError: null, planningPhase: 'understanding_event', failedPlanningPhase: null }
     case 'interpretSuccess':
       return {
         ...state,
@@ -99,9 +115,14 @@ function reducer(state: PlanningState, action: PlanningAction): PlanningState {
         quantityPlan: null,
         quantityStatus: 'idle',
         quantityError: null,
+        servingOverrides: {},
         productPlan: null,
         productStatus: 'idle',
         productError: null,
+        purchasingStatus: 'idle',
+        purchasingError: null,
+        planningPhase: 'understanding_event',
+        failedPlanningPhase: null,
       }
     case 'interpretError':
       return { ...state, interpretationStatus: 'error', interpretationError: action.message }
@@ -118,9 +139,14 @@ function reducer(state: PlanningState, action: PlanningAction): PlanningState {
         quantityPlan: null,
         quantityStatus: 'idle',
         quantityError: null,
+        servingOverrides: {},
         productPlan: null,
         productStatus: 'idle',
         productError: null,
+        purchasingStatus: 'idle',
+        purchasingError: null,
+        planningPhase: 'understanding_event',
+        failedPlanningPhase: null,
       }
     case 'updateField':
       return {
@@ -135,30 +161,43 @@ function reducer(state: PlanningState, action: PlanningAction): PlanningState {
         quantityPlan: null,
         quantityStatus: 'idle',
         quantityError: null,
+        servingOverrides: {},
         productPlan: null,
         productStatus: 'idle',
         productError: null,
+        purchasingStatus: 'idle',
+        purchasingError: null,
+        planningPhase: 'understanding_event',
+        failedPlanningPhase: null,
       }
     case 'menuStart':
-      return { ...state, menuStatus: 'loading', menuError: null }
+      return { ...state, menuStatus: 'loading', menuError: null, planningPhase: 'creating_menu', failedPlanningPhase: null }
     case 'menuSuccess':
-      return { ...state, menu: action.menu, menuStatus: 'success', menuError: null, quantityPlan: null, quantityStatus: 'idle', quantityError: null, productPlan: null, productStatus: 'idle', productError: null, planInvalidatedByBrief: false }
+      return { ...state, menu: action.menu, menuStatus: 'success', menuError: null, quantityPlan: null, quantityStatus: 'idle', quantityError: null, servingOverrides: {}, productPlan: null, productStatus: 'idle', productError: null, purchasingStatus: 'idle', purchasingError: null, planInvalidatedByBrief: false }
     case 'menuError':
-      return { ...state, menu: null, menuStatus: 'error', menuError: action.message }
+      return { ...state, menu: null, menuStatus: 'error', menuError: action.message, planningPhase: 'error', failedPlanningPhase: 'creating_menu' }
     case 'menuReset':
-      return { ...state, menuStatus: 'idle', menuError: null }
+      return { ...state, menu: null, menuStatus: 'idle', menuError: null, quantityPlan: null, quantityStatus: 'idle', quantityError: null, productPlan: null, productStatus: 'idle', productError: null, purchasingStatus: 'idle', purchasingError: null, planningPhase: 'understanding_event', failedPlanningPhase: null }
     case 'quantityStart':
-      return { ...state, quantityStatus: 'loading', quantityError: null, productPlan: null, productStatus: 'idle', productError: null }
+      return { ...state, quantityStatus: 'loading', quantityError: null, productPlan: null, productStatus: 'idle', productError: null, purchasingStatus: 'idle', purchasingError: null, planningPhase: 'calculating_quantities', failedPlanningPhase: null }
     case 'quantitySuccess':
       return { ...state, quantityPlan: action.plan, quantityStatus: 'success', quantityError: null }
     case 'quantityError':
-      return { ...state, quantityPlan: null, quantityStatus: 'error', quantityError: action.message, productPlan: null, productStatus: 'idle', productError: null }
+      return { ...state, quantityPlan: null, quantityStatus: 'error', quantityError: action.message, productPlan: null, productStatus: 'idle', productError: null, purchasingStatus: 'idle', purchasingError: null, planningPhase: 'error', failedPlanningPhase: 'calculating_quantities' }
+    case 'servingOverridesSet':
+      return { ...state, servingOverrides: action.overrides }
     case 'productStart':
-      return { ...state, productStatus: 'loading', productError: null }
+      return { ...state, productStatus: 'loading', productError: null, purchasingStatus: 'idle', purchasingError: null, planningPhase: 'matching_products', failedPlanningPhase: null }
     case 'productSuccess':
       return { ...state, productPlan: action.plan, productStatus: 'success', productError: null }
     case 'productError':
-      return { ...state, productPlan: null, productStatus: 'error', productError: action.message }
+      return { ...state, productPlan: null, productStatus: 'error', productError: action.message, planningPhase: 'error', failedPlanningPhase: 'matching_products' }
+    case 'purchasingStart':
+      return { ...state, purchasingStatus: 'loading', purchasingError: null, planningPhase: 'calculating_budget', failedPlanningPhase: null }
+    case 'purchasingSuccess':
+      return { ...state, purchasingStatus: 'success', purchasingError: null, planningPhase: 'complete', failedPlanningPhase: null }
+    case 'purchasingError':
+      return { ...state, purchasingStatus: 'error', purchasingError: action.message, planningPhase: 'error', failedPlanningPhase: 'calculating_budget' }
     case 'basicsRegenerationStart':
       return {
         ...state,
@@ -170,9 +209,14 @@ function reducer(state: PlanningState, action: PlanningAction): PlanningState {
         quantityPlan: null,
         quantityStatus: 'idle',
         quantityError: null,
+        servingOverrides: {},
         productPlan: null,
         productStatus: 'idle',
         productError: null,
+        purchasingStatus: 'idle',
+        purchasingError: null,
+        planningPhase: 'creating_menu',
+        failedPlanningPhase: null,
       }
     case 'resetPlan':
       return initialState
@@ -192,29 +236,64 @@ const PlanningContext = createContext<PlanningContextValue | null>(null)
 export function PlanningProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, initialState)
 
-  async function loadProducts(plan: QuantityPlan) {
-    if (plan.ingredientRequirements.length === 0) {
-      dispatch({ type: 'productSuccess', plan: { matches: [], summary: { totalIngredients: 0, matched: 0, lowConfidence: 0, unresolved: 0, selectedProductsWithPrice: 0 } } })
-      return
+  async function loadPurchasing(productPlan: ProductMatchPlan, event = state.confirmedEvent) {
+    dispatch({ type: 'purchasingStart' })
+    if (event.guestCount === null) {
+      dispatch({ type: 'purchasingError', message: 'Add a guest count before calculating the budget.' })
+      return false
     }
-    dispatch({ type: 'productStart' })
     try {
-      dispatch({ type: 'productSuccess', plan: await matchProducts(plan.ingredientRequirements) })
+      await createPurchasingPlan(event, productPlan)
+      dispatch({ type: 'purchasingSuccess' })
+      return true
     } catch (error) {
-      dispatch({ type: 'productError', message: error instanceof PlanResultsServiceError ? error.message : 'Eventa could not match products. Please try again.' })
+      dispatch({ type: 'purchasingError', message: error instanceof PlanResultsServiceError ? error.message : 'Eventa could not calculate the budget. Please try again.' })
+      return false
     }
   }
 
-  async function loadQuantities(event = state.confirmedEvent, menu = state.menu) {
-    if (!menu || event.guestCount === null) return
-    dispatch({ type: 'quantityStart' })
+  async function loadProducts(plan: QuantityPlan, event = state.confirmedEvent) {
+    dispatch({ type: 'productStart' })
+    if (plan.ingredientRequirements.length === 0) {
+      const productPlan = { matches: [], summary: { totalIngredients: 0, matched: 0, lowConfidence: 0, unresolved: 0, selectedProductsWithPrice: 0 } }
+      dispatch({ type: 'productSuccess', plan: productPlan })
+      return loadPurchasing(productPlan, event)
+    }
     try {
-      const plan = await calculateQuantities(event, menu)
+      const productPlan = await matchProducts(plan.ingredientRequirements)
+      dispatch({ type: 'productSuccess', plan: productPlan })
+      return loadPurchasing(productPlan, event)
+    } catch (error) {
+      dispatch({ type: 'productError', message: error instanceof PlanResultsServiceError ? error.message : 'Eventa could not match products. Please try again.' })
+      return false
+    }
+  }
+
+  async function loadQuantities(event = state.confirmedEvent, menu = state.menu, overrides = state.servingOverrides) {
+    dispatch({ type: 'quantityStart' })
+    if (!menu) {
+      dispatch({ type: 'quantityError', message: 'A generated menu is required before calculating quantities.' })
+      return false
+    }
+    if (event.guestCount === null) {
+      dispatch({ type: 'quantityError', message: 'Add a guest count before calculating quantities.' })
+      return false
+    }
+    try {
+      const servingOverrides = Object.entries(overrides).map(([menuItemId, servings]) => ({ menuItemId, servings }))
+      const plan = await calculateQuantities(event, menu, servingOverrides)
       dispatch({ type: 'quantitySuccess', plan })
-      await loadProducts(plan)
+      return await loadProducts(plan, event)
     } catch (error) {
       dispatch({ type: 'quantityError', message: error instanceof PlanResultsServiceError ? error.message : 'Eventa could not calculate quantities. Please try again.' })
+      return false
     }
+  }
+
+  async function confirmServingAllocation(menuItemId: string, servings: number) {
+    const overrides = { ...state.servingOverrides, [menuItemId]: servings }
+    dispatch({ type: 'servingOverridesSet', overrides })
+    await loadQuantities(state.confirmedEvent, state.menu, overrides)
   }
 
   async function interpretBrief() {
@@ -236,7 +315,7 @@ export function PlanningProvider({ children }: { children: ReactNode }) {
     try {
       const menu = await generateMenu(state.confirmedEvent, state.brief)
       dispatch({ type: 'menuSuccess', menu })
-      void loadQuantities(state.confirmedEvent, menu)
+      return true
     } catch (error) {
       const message = error instanceof GenerateMenuServiceError
         ? error.message
@@ -246,13 +325,32 @@ export function PlanningProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  async function retryFailedPlanningPhase() {
+    switch (state.failedPlanningPhase) {
+      case 'creating_menu':
+        return generateConfirmedMenu()
+      case 'calculating_quantities':
+        return loadQuantities(state.confirmedEvent, state.menu, state.servingOverrides)
+      case 'matching_products':
+        if (state.quantityPlan) return loadProducts(state.quantityPlan, state.confirmedEvent)
+        dispatch({ type: 'productError', message: 'Quantity results are required before matching products.' })
+        return false
+      case 'calculating_budget':
+        if (state.productPlan) return loadPurchasing(state.productPlan, state.confirmedEvent)
+        dispatch({ type: 'purchasingError', message: 'Product matches are required before calculating the budget.' })
+        return false
+      case 'understanding_event':
+      case null:
+        return false
+    }
+  }
+
   async function regeneratePlanWithBasics(fields: InterpretationField[]) {
     const event = fields.reduce(applyInterpretationFieldEdit, state.confirmedEvent)
     dispatch({ type: 'basicsRegenerationStart', event, interpretation: fields })
     try {
       const menu = await generateMenu(event, state.brief)
       dispatch({ type: 'menuSuccess', menu })
-      void loadQuantities(event, menu)
     } catch (error) {
       const message = error instanceof GenerateMenuServiceError
         ? error.message
@@ -271,9 +369,11 @@ export function PlanningProvider({ children }: { children: ReactNode }) {
         startManualEntry: () => dispatch({ type: 'startManualEntry' }),
         updateField: (field) => dispatch({ type: 'updateField', field }),
         generateConfirmedMenu,
+        retryFailedPlanningPhase,
         resetMenuGeneration: () => dispatch({ type: 'menuReset' }),
-        retryQuantities: () => loadQuantities(),
+        retryQuantities: async () => { await loadQuantities() },
         retryProducts: async () => { if (state.quantityPlan) await loadProducts(state.quantityPlan) },
+        confirmServingAllocation,
         regeneratePlanWithBasics,
         resetPlan: () => dispatch({ type: 'resetPlan' }),
         loadTemplate: (event, brief) => dispatch({

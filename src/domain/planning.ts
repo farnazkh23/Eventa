@@ -31,6 +31,9 @@ export interface InterpretationField {
   editable: boolean
 }
 
+export type ActivePlanningPhase = 'understanding_event' | 'creating_menu' | 'calculating_quantities' | 'matching_products' | 'calculating_budget'
+export type PlanningPhase = ActivePlanningPhase | 'complete' | 'error'
+
 export interface PlanningState {
   brief: string
   confirmedEvent: PlanningEventInterpretation
@@ -43,8 +46,13 @@ export interface PlanningState {
   quantityPlan: QuantityPlan | null
   quantityStatus: ResultStatus
   quantityError: string | null
+  servingOverrides: Record<string, number>
   productPlan: ProductMatchPlan | null
   productStatus: ResultStatus
   productError: string | null
+  purchasingStatus: ResultStatus
+  purchasingError: string | null
+  planningPhase: PlanningPhase
+  failedPlanningPhase: ActivePlanningPhase | null
   planInvalidatedByBrief: boolean
 }
