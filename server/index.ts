@@ -2,17 +2,30 @@ import { randomUUID } from 'node:crypto'
 import { createServer } from 'node:http'
 import { CachedDeduplicatingAIProvider, type AIProvider } from './ai/aiProvider.js'
 import { GeminiProvider } from './ai/geminiProvider.js'
+import { KiconnectProvider } from './ai/kiconnectProvider.js'
+import { KiconnectFailoverProvider } from './ai/kiconnectFailoverProvider.js'
 import { handleCalculateQuantities } from './api/calculateQuantities.js'
 import { handleGenerateMenu } from './api/generateMenu.js'
 import { sendAppError, sendJson } from './api/http.js'
 import { handleInterpretEvent } from './api/interpretEvent.js'
+import { handleMatchProducts } from './api/matchProducts.js'
 import { loadServerConfig } from './config/env.js'
 import { AppError } from './errors/appError.js'
 import { logServer, withRequestContext } from './observability/logger.js'
 
 const config = loadServerConfig()
-const provider: AIProvider | null = config.geminiApiKey
-  ? new CachedDeduplicatingAIProvider(new GeminiProvider(config.geminiApiKey, config.geminiModel), {
+const baseProvider: AIProvider | null = config.aiProvider === 'kiconnect'
+  ? config.kiconnectApiKey ? new KiconnectFailoverProvider(
+      new KiconnectProvider(config.kiconnectApiKey, config.kiconnectBaseUrl, config.kiconnectModel),
+      new KiconnectProvider(config.kiconnectApiKey, config.kiconnectBaseUrl, config.kiconnectFallbackModel, {
+        allowPartialQuantityDataAfterCorrection: true,
+      }),
+      config.kiconnectModel,
+      config.kiconnectFallbackModel,
+    ) : null
+  : config.geminiApiKey ? new GeminiProvider(config.geminiApiKey, config.geminiModel) : null
+const provider: AIProvider | null = baseProvider
+  ? new CachedDeduplicatingAIProvider(baseProvider, {
       enabled: config.aiCacheEnabled,
       ttlMs: config.aiCacheTtlMs,
       maxEntries: config.aiCacheMaxEntries,
@@ -28,7 +41,7 @@ const server = createServer(async (request, response) => {
   await withRequestContext({ requestId, endpoint: url.pathname }, async () => { try {
     if (request.method === 'GET' && url.pathname === '/api/health') {
       operation = 'health'
-      sendJson(response, 200, { status: 'ok', version: process.env.npm_package_version ?? '0.1.0', aiConfigured: provider !== null })
+      sendJson(response, 200, { status: 'ok', version: process.env.npm_package_version ?? '0.1.0', aiConfigured: provider !== null, aiProvider: provider?.name ?? config.aiProvider })
       return
     }
     if (request.method === 'POST' && url.pathname === '/api/interpret-event') {
@@ -39,6 +52,9 @@ const server = createServer(async (request, response) => {
     }
     if (request.method === 'POST' && url.pathname === '/api/calculate-quantities') {
       operation = 'calculate_quantities'; await handleCalculateQuantities(request, response); return
+    }
+    if (request.method === 'POST' && url.pathname === '/api/match-products') {
+      operation = 'match_products'; await handleMatchProducts(request, response); return
     }
     throw new AppError('NOT_FOUND')
   } catch (error) {
@@ -54,7 +70,7 @@ const server = createServer(async (request, response) => {
 server.requestTimeout = 300_000
 server.timeout = 300_000
 server.listen(config.port, '127.0.0.1', () => {
-  logServer('info', { operation: 'server_started', status: 200, port: config.port, aiConfigured: provider !== null })
+  logServer('info', { operation: 'server_started', status: 200, port: config.port, aiConfigured: provider !== null, aiProvider: provider?.name ?? config.aiProvider })
 })
 
 function shutdown() { server.close(() => process.exit(0)) }

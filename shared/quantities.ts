@@ -42,11 +42,19 @@ export interface UnresolvedQuantity {
   reason: string
 }
 
+export interface UnresolvedIngredientQuantity {
+  menuItemId: string
+  ingredientName: string
+  status: 'needs_confirmation'
+  reason: string
+}
+
 export interface QuantityPlan {
   guestCount: number
   isComplete: boolean
   itemAllocations: ItemAllocation[]
   ingredientRequirements: IngredientRequirement[]
   unresolved: UnresolvedQuantity[]
+  unresolvedIngredients: UnresolvedIngredientQuantity[]
   assumptions: string[]
 }

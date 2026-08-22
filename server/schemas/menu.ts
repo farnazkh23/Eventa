@@ -3,6 +3,10 @@ import { menuCourses } from '../../shared/menu.js'
 import { compatibleEventInterpretationSchema } from './eventInterpretation.js'
 import { toGeminiJsonSchema } from './geminiJsonSchema.js'
 
+export const menuIngredientUnits = ['g', 'kg', 'ml', 'l', 'piece'] as const
+const generatedMenuCourses = menuCourses.filter((course) =>
+  course !== 'vegetarian' && course !== 'vegan')
+
 const menuCourseSchema = z.enum(menuCourses)
 const servingScopeSchema = z.enum(['all_guests', 'dietary_option', 'shared'])
 
@@ -69,7 +73,11 @@ export const generatedMenuJsonSchema = toGeminiJsonSchema({
       items: {
         type: 'object',
         properties: {
-          course: { type: 'string', enum: [...menuCourses] },
+          course: {
+            description: 'Meal position. Dietary properties belong in dietaryTags; a vegetarian or vegan main still uses main.',
+            type: 'string',
+            enum: [...generatedMenuCourses],
+          },
           name: { type: 'string' },
           description: { type: 'string' },
           dietaryTags: { type: 'array', items: { type: 'string' } },
@@ -92,8 +100,14 @@ export const generatedMenuJsonSchema = toGeminiJsonSchema({
               type: 'object',
               properties: {
                 name: { type: 'string' },
-                amountPerServing: { anyOf: [{ type: 'number' }, { type: 'null' }] },
-                unit: { anyOf: [{ type: 'string' }, { type: 'null' }] },
+                amountPerServing: {
+                  description: 'Positive planning amount for one serving; never an event total. Null only when genuinely impossible to quantify.',
+                  anyOf: [{ type: 'number' }, { type: 'null' }],
+                },
+                unit: {
+                  description: 'Unit for amountPerServing. Use null only when the amount is null.',
+                  anyOf: [{ type: 'string', enum: [...menuIngredientUnits] }, { type: 'null' }],
+                },
               },
               required: ['name', 'amountPerServing', 'unit'],
             },

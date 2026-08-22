@@ -34,7 +34,7 @@ const validMenu: GeneratedMenu = {
       servingScope: 'all_guests',
     },
     {
-      course: 'vegan',
+      course: 'main',
       name: 'Mushroom risotto',
       description: 'Plant-based risotto with herbs.',
       dietaryTags: ['vegan'],
@@ -70,5 +70,28 @@ describe('GeminiMenuGenerator corrective regeneration', () => {
 
     await expect(generator.generate(input)).resolves.toMatchObject({ title: 'Birthday dinner' })
     expect(generate).toHaveBeenCalledTimes(2)
+  })
+
+  it('corrects missing per-serving ingredient metadata before returning a menu', async () => {
+    const incompleteQuantities: GeneratedMenu = {
+      ...validMenu,
+      items: validMenu.items.map((item, index) => index === 0 ? {
+        ...item,
+        ingredients: [{ name: 'chicken', amountPerServing: null, unit: null }],
+      } : item),
+    }
+    const generate = vi.fn<typeof generateStructuredJson>()
+      .mockResolvedValueOnce({ value: incompleteQuantities, geminiAttempt: 1 })
+      .mockResolvedValueOnce({ value: validMenu, geminiAttempt: 1 })
+    const generator = new GeminiMenuGenerator('test-key', 'test-model', generate)
+
+    const menu = await generator.generate(input)
+
+    expect(generate).toHaveBeenCalledTimes(2)
+    expect(menu.items.flatMap((menuItem) => menuItem.ingredients)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: 'chicken', amountPerServing: 180, unit: 'g' }),
+      ]),
+    )
   })
 })

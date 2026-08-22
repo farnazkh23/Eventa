@@ -89,6 +89,7 @@ describe('quantityPlanSchema', () => {
       }],
       ingredientRequirements: [],
       unresolved: [{ menuItemId: 'main', reason: 'Dietary count is unknown.' }],
+      unresolvedIngredients: [],
       assumptions: ['No buffer is included.'],
     }).success).toBe(true)
   })

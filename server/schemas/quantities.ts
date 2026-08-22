@@ -70,11 +70,19 @@ const unresolvedQuantitySchema = z.object({
   reason: z.string().min(1),
 }).strict()
 
+const unresolvedIngredientQuantitySchema = z.object({
+  menuItemId: z.string().min(1),
+  ingredientName: z.string().min(1),
+  status: z.literal('needs_confirmation'),
+  reason: z.string().min(1),
+}).strict()
+
 export const quantityPlanSchema = z.object({
   guestCount: z.number().int().positive(),
   isComplete: z.boolean(),
   itemAllocations: z.array(itemAllocationSchema),
   ingredientRequirements: z.array(ingredientRequirementSchema),
   unresolved: z.array(unresolvedQuantitySchema),
+  unresolvedIngredients: z.array(unresolvedIngredientQuantitySchema),
   assumptions: z.array(z.string().min(1)),
 }).strict()

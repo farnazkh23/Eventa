@@ -33,13 +33,21 @@ function allocationGroup(course: MenuCourse): string {
 function relevantRequirements(
   item: MenuItem,
   requirements: DietaryRequirement[],
+  menuItems: MenuItem[],
 ): DietaryRequirement[] {
   const tags = new Set(item.dietaryTags.map(normalizedText))
   const unique = new Map<string, DietaryRequirement>()
 
   requirements.forEach((requirement) => {
     const type = normalizedText(requirement.type)
-    if (tags.has(type)) {
+    // If every choice in a course supports a requirement, that tag describes
+    // whole-course compatibility rather than the audience of this alternative.
+    // For example, gluten-free tags on every main must not make a vegan option
+    // appear to serve both the vegan and gluten-free guest allocations.
+    const isCompatibilityTagForWholeCourse = menuItems
+        .filter((candidate) => allocationGroup(candidate.course) === allocationGroup(item.course))
+        .every((candidate) => candidate.dietaryTags.map(normalizedText).includes(type))
+    if (tags.has(type) && !isCompatibilityTagForWholeCourse) {
       unique.set(`${type}\u0000${requirement.guestCount ?? 'unknown'}`, {
         type,
         guestCount: requirement.guestCount,
@@ -53,11 +61,12 @@ function relevantRequirements(
 function dietaryAllocation(
   item: MenuItem,
   requirements: DietaryRequirement[],
+  menuItems: MenuItem[],
   override: number | undefined,
 ): AllocationDecision {
   if (override !== undefined) return { plannedServings: override }
 
-  const relevant = relevantRequirements(item, requirements)
+  const relevant = relevantRequirements(item, requirements, menuItems)
   if (relevant.length === 0) {
     return {
       plannedServings: null,
@@ -125,7 +134,7 @@ function standardAllocation(
 
   const audienceCounts = new Map<string, Set<number>>()
   for (const alternative of activeAlternatives) {
-    const relevant = relevantRequirements(alternative, requirements)
+    const relevant = relevantRequirements(alternative, requirements, menuItems)
     const types = new Set(relevant.map(({ type }) => type))
     if (types.size !== 1) {
       return {
@@ -209,7 +218,12 @@ export function calculateQuantityPlan(input: CalculateQuantitiesRequest): Quanti
   input.menu.items.forEach((item) => {
     const override = overrides.get(item.id)
     if (item.servingScope === 'dietary_option') {
-      decisions.set(item.id, dietaryAllocation(item, input.event.dietaryRequirements, override))
+      decisions.set(item.id, dietaryAllocation(
+        item,
+        input.event.dietaryRequirements,
+        input.menu.items,
+        override,
+      ))
     } else if (item.servingScope === 'shared') {
       decisions.set(item.id, { plannedServings: override ?? input.event.guestCount })
     }
@@ -231,6 +245,7 @@ export function calculateQuantityPlan(input: CalculateQuantitiesRequest): Quanti
   const ingredientRequirements = new Map<string, IngredientRequirement>()
   const itemAllocations: ItemAllocation[] = []
   const unresolved: QuantityPlan['unresolved'] = []
+  const unresolvedIngredients: QuantityPlan['unresolvedIngredients'] = []
 
   input.menu.items.forEach((item) => {
     const decision = decisions.get(item.id) ?? {
@@ -256,17 +271,38 @@ export function calculateQuantityPlan(input: CalculateQuantitiesRequest): Quanti
     const quantityIssues = new Set<string>()
     item.ingredients.forEach((ingredient) => {
       if (ingredient.amountPerServing === null) {
-        quantityIssues.add(`Missing per-serving amount for ${ingredient.name}.`)
+        const reason = `Missing per-serving amount for ${ingredient.name}.`
+        quantityIssues.add(reason)
+        unresolvedIngredients.push({
+          menuItemId: item.id,
+          ingredientName: ingredient.name,
+          status: 'needs_confirmation',
+          reason,
+        })
         return
       }
       if (ingredient.unit === null) {
-        quantityIssues.add(`Missing unit for ${ingredient.name}.`)
+        const reason = `Missing unit for ${ingredient.name}.`
+        quantityIssues.add(reason)
+        unresolvedIngredients.push({
+          menuItemId: item.id,
+          ingredientName: ingredient.name,
+          status: 'needs_confirmation',
+          reason,
+        })
         return
       }
 
       const canonical = toCanonicalQuantity(ingredient.amountPerServing, ingredient.unit)
       if (!canonical) {
-        quantityIssues.add(`Unsupported unit "${ingredient.unit}" for ${ingredient.name}.`)
+        const reason = `Unsupported unit "${ingredient.unit}" for ${ingredient.name}.`
+        quantityIssues.add(reason)
+        unresolvedIngredients.push({
+          menuItemId: item.id,
+          ingredientName: ingredient.name,
+          status: 'needs_confirmation',
+          reason,
+        })
         return
       }
 
@@ -297,6 +333,7 @@ export function calculateQuantityPlan(input: CalculateQuantitiesRequest): Quanti
     itemAllocations,
     ingredientRequirements: [...ingredientRequirements.values()],
     unresolved,
+    unresolvedIngredients,
     assumptions: [
       ...ASSUMPTIONS,
       ...(overrides.size > 0

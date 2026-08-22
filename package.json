@@ -15,7 +15,11 @@
     "verify:ai": "tsx server/scripts/verifyAi.ts",
     "verify:menus": "tsx server/scripts/verifyMenus.ts",
     "verify:flow-reliability": "tsx server/scripts/verifyFlowReliability.ts",
-    "verify:quantities": "tsx server/scripts/verifyQuantities.ts"
+    "verify:quantities": "tsx server/scripts/verifyQuantities.ts",
+    "verify:kiconnect-quantities": "tsx server/scripts/verifyKiconnectQuantityFlow.ts",
+    "verify:kiconnect-pipeline": "tsx server/scripts/verifyKiconnectQuantityFlow.ts",
+    "verify:products": "tsx server/scripts/verifyProductMatching.ts",
+    "benchmark:kiconnect": "tsx server/scripts/benchmarkKiconnect.ts"
   },
   "dependencies": {
     "@google/genai": "^2.18.0",
@@ -37,6 +41,7 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.4",
     "globals": "^17.11.0",
+    "pdf-parse": "^2.4.5",
     "tsx": "^4.23.12",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.67.0",

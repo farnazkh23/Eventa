@@ -13,8 +13,9 @@ flowchart TD
   ZOD --> DOMAIN[Event and menu domain objects]
   API --> QTY[Deterministic quantity engine]
   DOMAIN --> QTY
-  QTY -. next integration .-> CATALOGUE[Transgourmet catalogue adapter]
-  CATALOGUE -.-> OUTPUT[Pack counts, budget, shopping list]
+  QTY --> MATCHER[Deterministic product matcher]
+  MATCHER --> CATALOGUE[Canonical Transgourmet dataset]
+  CATALOGUE -. next integration .-> OUTPUT[Pack counts, budget, shopping list]
 ```
 
 Solid lines are implemented. Dotted lines are future integrations.
@@ -28,6 +29,7 @@ sequenceDiagram
   participant P as AI provider
   participant V as Zod/policy validation
   participant Q as Quantity engine
+  participant M as Product matcher
 
   U->>A: POST /api/interpret-event
   A->>P: interpret(description)
@@ -40,6 +42,9 @@ sequenceDiagram
   U->>A: POST /api/calculate-quantities
   A->>Q: event + menu + optional overrides
   Q-->>U: complete or partial quantity plan
+  U->>A: POST /api/match-products
+  A->>M: normalized ingredient names
+  M-->>U: matches, low-confidence candidates, or unresolved results
 ```
 
 ## AI versus deterministic responsibility
@@ -52,7 +57,7 @@ sequenceDiagram
 | Allocate dietary servings | | ✓ |
 | Detect unknown/overlapping audiences | | ✓ |
 | Convert and aggregate quantities | | ✓ |
-| Match products | | Future |
+| Match products | | Yes |
 | Calculate packs, prices, and budget | | Future |
 
 ## Implemented API endpoints
@@ -63,6 +68,7 @@ sequenceDiagram
 | `POST` | `/api/interpret-event` | Validate a brief and return structured event facts |
 | `POST` | `/api/generate-menu` | Generate and validate a catering menu |
 | `POST` | `/api/calculate-quantities` | Return deterministic serving and ingredient quantities |
+| `POST` | `/api/match-products` | Rank canonical products for ingredient names without AI |
 
 All other API paths return a typed `NOT_FOUND` response.
 
@@ -73,6 +79,7 @@ All other API paths return a typed `NOT_FOUND` response.
 - `EventMenu`: title, summary, menu items, and transparent planning assumptions.
 - `MenuItem`: stable ID, course, tags, portion, per-serving ingredients, and serving scope.
 - `QuantityPlan`: item allocations, canonical ingredient requirements, unresolved decisions, completion state, and assumptions.
+- `ProductMatchPlan`: deterministic selected products, low-confidence candidates, alternatives, reasons, and unresolved ingredients.
 
 ## Security boundaries
 
@@ -89,10 +96,11 @@ All other API paths return a typed `NOT_FOUND` response.
 | Integration | Status |
 |---|---|
 | Gemini through `@google/genai` | Implemented |
+| KI:connect through its OpenAI-compatible Chat Completions API | Implemented; Mistral Small 4 primary with GPT OSS fallback |
 | Model-agnostic `AIProvider` boundary | Implemented |
 | In-memory cache and identical-request deduplication | Implemented, hackathon scale |
 | Deterministic quantity service | Implemented API; frontend connection pending |
-| Transgourmet catalogue/dataset adapter | Not implemented |
+| Canonical Transgourmet dataset loader and deterministic matcher | Implemented API; frontend connection pending |
 | Pack and price calculation | Not implemented |
 | Budget and shopping list | Not implemented |
 | Checkout/order submission | Not implemented |

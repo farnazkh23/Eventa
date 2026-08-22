@@ -152,6 +152,54 @@ describe('calculateQuantityPlan serving allocation', () => {
     })
   })
 
+  it('keeps a dedicated vegan option ambiguous when another dietary tag is not universal', () => {
+    const plan = calculateQuantityPlan({
+      event: event(35, [
+        { type: 'gluten-free', guestCount: 3 },
+        { type: 'vegan', guestCount: 2 },
+      ]),
+      menu: menu([
+        item({ id: 'standard', name: 'Standard main' }),
+        item({
+          id: 'vegan',
+          name: 'Gluten-free vegan main',
+          course: 'vegan',
+          dietaryTags: ['vegan', 'gluten-free'],
+          servingScope: 'dietary_option',
+        }),
+      ]),
+    })
+
+    expect(allocation(plan, 'vegan')).toMatchObject({
+      plannedServings: null,
+      status: 'needs_confirmation',
+      reason: expect.stringContaining('overlap'),
+    })
+    expect(allocation(plan, 'standard')?.plannedServings).toBeNull()
+  })
+
+  it('does not treat a whole-course dietary compatibility tag as another allocation audience', () => {
+    const plan = calculateQuantityPlan({
+      event: event(35, [
+        { type: 'gluten-free', guestCount: 3 },
+        { type: 'vegan', guestCount: 2 },
+      ]),
+      menu: menu([
+        item({ id: 'standard', name: 'Gluten-free standard main', dietaryTags: ['gluten-free'] }),
+        item({
+          id: 'vegan',
+          name: 'Gluten-free vegan main',
+          course: 'vegan',
+          dietaryTags: ['vegan', 'gluten-free'],
+          servingScope: 'dietary_option',
+        }),
+      ]),
+    })
+
+    expect(allocation(plan, 'vegan')?.plannedServings).toBe(2)
+    expect(allocation(plan, 'standard')?.plannedServings).toBe(33)
+  })
+
   it('uses the full guest count for shared items', () => {
     const plan = calculateQuantityPlan({
       event: event(25),
@@ -221,6 +269,12 @@ describe('calculateQuantityPlan ingredient totals', () => {
       sourceMenuItemIds: ['incomplete'],
     }])
     expect(plan.ingredientRequirements.some(({ name }) => name === 'mystery ingredient')).toBe(false)
+    expect(plan.unresolvedIngredients).toEqual([{
+      menuItemId: 'incomplete',
+      ingredientName: 'mystery ingredient',
+      status: 'needs_confirmation',
+      reason: 'Missing per-serving amount for mystery ingredient.',
+    }])
   })
 
   it('marks unsupported units unresolved instead of guessing a conversion', () => {
@@ -235,6 +289,11 @@ describe('calculateQuantityPlan ingredient totals', () => {
 
     expect(allocation(plan, 'unsupported')?.status).toBe('missing_quantity_data')
     expect(plan.ingredientRequirements).toEqual([])
+    expect(plan.unresolvedIngredients).toEqual([expect.objectContaining({
+      menuItemId: 'unsupported',
+      ingredientName: 'oil',
+      status: 'needs_confirmation',
+    })])
   })
 
   it('H: applies an explicit serving override deterministically', () => {

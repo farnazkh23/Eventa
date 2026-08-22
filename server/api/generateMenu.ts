@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { MenuGenerator } from '../ai/menuGenerator.js'
-import { describeGeminiError, StructuredOutputValidationError } from '../ai/gemini.js'
+import { toAIAppError } from '../ai/providerErrors.js'
 import { AppError } from '../errors/appError.js'
 import { generateMenuRequestSchema } from '../schemas/menu.js'
 import { readJsonBody, sendAppError, sendJson } from './http.js'
@@ -12,9 +12,5 @@ export async function handleGenerateMenu(request: IncomingMessage, response: Ser
   const validation = generateMenuRequestSchema.safeParse(body)
   if (!validation.success) { sendAppError(response, new AppError('VALIDATION_ERROR', { message: 'Please confirm valid event details.' })); return }
   try { sendJson(response, 200, await generator.generate(validation.data)) }
-  catch (cause) {
-    if (cause instanceof StructuredOutputValidationError) throw new AppError('AI_INVALID_OUTPUT', { cause })
-    const details = describeGeminiError(cause)
-    throw new AppError(details.category === 'gemini_429' ? 'AI_RATE_LIMITED' : 'AI_TEMPORARILY_UNAVAILABLE', { cause })
-  }
+  catch (cause) { throw toAIAppError(cause) }
 }
