@@ -30,22 +30,27 @@
   justify-self: end;
   min-width: 44px;
   min-height: 44px;
-  margin: 0.1rem 0 -0.65rem;
-  padding: 0.45rem 0.25rem;
+  margin: 0.25rem 0 -0.45rem;
+  padding: 0.55rem 0.3rem;
   border: 0;
-  color: var(--color-text-muted);
+  color: var(--color-brand);
   background: transparent;
-  font-size: 0.84rem;
-  font-weight: 600;
+  font-size: 0.88rem;
+  font-weight: 640;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--color-brand) 55%, transparent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.22rem;
   cursor: pointer;
 }
 
 .example:hover:not(:disabled) {
-  color: var(--color-text);
+  color: var(--color-brand-hover);
+  text-decoration-color: currentColor;
 }
 
 .example:active:not(:disabled) {
-  color: var(--color-brand);
+  transform: translateY(1px);
 }
 
 .form > :last-child {
