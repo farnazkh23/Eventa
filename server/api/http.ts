@@ -1,7 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { ApiErrorResponse } from '../../shared/eventInterpretation.js'
 
-const MAX_BODY_BYTES = 16_384
+const MAX_BODY_BYTES = 262_144
 
 export function sendJson(response: ServerResponse, status: number, payload: unknown): void {
   response.writeHead(status, {

@@ -5,6 +5,7 @@ import { GeminiMenuGenerator } from './ai/geminiMenuGenerator.js'
 import type { MenuGenerator } from './ai/menuGenerator.js'
 import { handleGenerateMenu } from './api/generateMenu.js'
 import { handleInterpretEvent } from './api/interpretEvent.js'
+import { handleCalculateQuantities } from './api/calculateQuantities.js'
 import { sendApiError } from './api/http.js'
 import { loadServerConfig } from './config/env.js'
 
@@ -26,6 +27,11 @@ const server = createServer(async (request, response) => {
 
   if (request.method === 'POST' && url.pathname === '/api/generate-menu') {
     await handleGenerateMenu(request, response, menuGenerator)
+    return
+  }
+
+  if (request.method === 'POST' && url.pathname === '/api/calculate-quantities') {
+    await handleCalculateQuantities(request, response)
     return
   }
 

@@ -13,7 +13,8 @@
     "typecheck": "tsc -b --pretty false",
     "test": "vitest run",
     "verify:ai": "tsx server/scripts/verifyAi.ts",
-    "verify:menus": "tsx server/scripts/verifyMenus.ts"
+    "verify:menus": "tsx server/scripts/verifyMenus.ts",
+    "verify:quantities": "tsx server/scripts/verifyQuantities.ts"
   },
   "dependencies": {
     "@google/genai": "^2.18.0",
