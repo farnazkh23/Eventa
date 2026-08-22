@@ -1,38 +1,15 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { EventInterpreter } from '../ai/eventInterpreter.js'
+import { AppError } from '../errors/appError.js'
 import { interpretEventRequestSchema } from '../schemas/eventInterpretation.js'
-import { readJsonBody, sendApiError, sendJson } from './http.js'
+import { readJsonBody, sendAppError, sendJson } from './http.js'
 
-export async function handleInterpretEvent(
-  request: IncomingMessage,
-  response: ServerResponse,
-  interpreter: EventInterpreter | null,
-): Promise<void> {
-  if (!interpreter) {
-    sendApiError(response, 503, 'AI_NOT_CONFIGURED', 'Eventa’s AI service is unavailable. Please try again.')
-    return
-  }
-
+export async function handleInterpretEvent(request: IncomingMessage, response: ServerResponse, interpreter: EventInterpreter | null): Promise<void> {
+  if (!interpreter) { sendAppError(response, new AppError('MISSING_CONFIGURATION')); return }
   let body: unknown
-
-  try {
-    body = await readJsonBody(request)
-  } catch {
-    sendApiError(response, 400, 'INVALID_REQUEST', 'Please provide a valid event description.')
-    return
-  }
-
+  try { body = await readJsonBody(request) } catch { sendAppError(response, new AppError('VALIDATION_ERROR', { message: 'Please provide a valid event description.' })); return }
   const validation = interpretEventRequestSchema.safeParse(body)
-
-  if (!validation.success) {
-    sendApiError(response, 400, 'INVALID_REQUEST', 'Please provide a valid event description.')
-    return
-  }
-
-  try {
-    const result = await interpreter.interpret(validation.data.description)
-    sendJson(response, 200, result)
-  } catch {
-    sendApiError(response, 503, 'AI_UNAVAILABLE', 'Eventa’s AI service is unavailable. Please try again.')
-  }
+  if (!validation.success) { sendAppError(response, new AppError('VALIDATION_ERROR', { message: 'Please provide a valid event description.' })); return }
+  try { sendJson(response, 200, await interpreter.interpret(validation.data.description)) }
+  catch (cause) { throw new AppError('AI_TEMPORARILY_UNAVAILABLE', { cause }) }
 }

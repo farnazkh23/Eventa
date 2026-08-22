@@ -32,12 +32,13 @@ export class GeminiEventInterpreter implements EventInterpreter {
   }
 
   async interpret(description: string): Promise<EventInterpretation> {
-    const parsedJson = await generateStructuredJson({
+    const { value: parsedJson } = await generateStructuredJson({
       client: this.client,
       model: this.model,
       contents: description,
       systemInstruction: SYSTEM_INSTRUCTION,
       responseJsonSchema: eventInterpretationJsonSchema,
+      endpoint: '/api/interpret-event',
     })
     const validated = eventInterpretationSchema.parse(parsedJson)
     return normalizeEventInterpretation(validated)

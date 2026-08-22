@@ -1,37 +1,20 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { MenuGenerator } from '../ai/menuGenerator.js'
+import { describeGeminiError, StructuredOutputValidationError } from '../ai/gemini.js'
+import { AppError } from '../errors/appError.js'
 import { generateMenuRequestSchema } from '../schemas/menu.js'
-import { readJsonBody, sendApiError, sendJson } from './http.js'
+import { readJsonBody, sendAppError, sendJson } from './http.js'
 
-export async function handleGenerateMenu(
-  request: IncomingMessage,
-  response: ServerResponse,
-  generator: MenuGenerator | null,
-): Promise<void> {
-  if (!generator) {
-    sendApiError(response, 503, 'AI_NOT_CONFIGURED', 'Eventa’s menu service is unavailable. Please try again.')
-    return
-  }
-
+export async function handleGenerateMenu(request: IncomingMessage, response: ServerResponse, generator: MenuGenerator | null): Promise<void> {
+  if (!generator) { sendAppError(response, new AppError('MISSING_CONFIGURATION', { message: 'Eventa\u2019s menu service is unavailable.' })); return }
   let body: unknown
-
-  try {
-    body = await readJsonBody(request)
-  } catch {
-    sendApiError(response, 400, 'INVALID_REQUEST', 'Please confirm valid event details.')
-    return
-  }
-
+  try { body = await readJsonBody(request) } catch { sendAppError(response, new AppError('VALIDATION_ERROR', { message: 'Please confirm valid event details.' })); return }
   const validation = generateMenuRequestSchema.safeParse(body)
-  if (!validation.success) {
-    sendApiError(response, 400, 'INVALID_REQUEST', 'Please confirm valid event details.')
-    return
-  }
-
-  try {
-    const menu = await generator.generate(validation.data)
-    sendJson(response, 200, menu)
-  } catch {
-    sendApiError(response, 503, 'MENU_UNAVAILABLE', 'Eventa could not create the menu. Please try again.')
+  if (!validation.success) { sendAppError(response, new AppError('VALIDATION_ERROR', { message: 'Please confirm valid event details.' })); return }
+  try { sendJson(response, 200, await generator.generate(validation.data)) }
+  catch (cause) {
+    if (cause instanceof StructuredOutputValidationError) throw new AppError('AI_INVALID_OUTPUT', { cause })
+    const details = describeGeminiError(cause)
+    throw new AppError(details.category === 'gemini_429' ? 'AI_RATE_LIMITED' : 'AI_TEMPORARILY_UNAVAILABLE', { cause })
   }
 }

@@ -1,4 +1,4 @@
-import { createContext, useContext, useReducer, type ReactNode } from 'react'
+import { createContext, useContext, useReducer, useRef, type ReactNode } from 'react'
 import type { InterpretationField, PlanningState } from '../domain/planning'
 import {
   applyInterpretationFieldEdit,
@@ -7,6 +7,7 @@ import {
 } from '../services/eventInterpretationMapper'
 import { interpretEvent, InterpretEventServiceError } from '../services/interpretEvent'
 import { generateMenu, GenerateMenuServiceError } from '../services/generateMenu'
+import { SingleFlight } from '../services/singleFlight'
 import type { EventInterpretation } from '../../shared/eventInterpretation'
 import type { EventMenu } from '../../shared/menu'
 
@@ -107,6 +108,7 @@ const PlanningContext = createContext<PlanningContextValue | null>(null)
 
 export function PlanningProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, initialState)
+  const menuGeneration = useRef(new SingleFlight())
 
   async function interpretBrief() {
     dispatch({ type: 'interpretStart' })
@@ -122,18 +124,20 @@ export function PlanningProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  async function generateConfirmedMenu() {
-    dispatch({ type: 'menuStart' })
-    try {
-      const menu = await generateMenu(state.confirmedEvent, state.brief)
-      dispatch({ type: 'menuSuccess', menu })
-    } catch (error) {
-      const message = error instanceof GenerateMenuServiceError
-        ? error.message
-        : 'Eventa could not create the menu. Please try again.'
-      dispatch({ type: 'menuError', message })
-      throw error
-    }
+  function generateConfirmedMenu(): Promise<void> {
+    return menuGeneration.current.run(async () => {
+      dispatch({ type: 'menuStart' })
+      try {
+        const menu = await generateMenu(state.confirmedEvent, state.brief)
+        dispatch({ type: 'menuSuccess', menu })
+      } catch (error) {
+        const message = error instanceof GenerateMenuServiceError
+          ? error.message
+          : 'Eventa could not create the menu. Please try again.'
+        dispatch({ type: 'menuError', message })
+        throw error
+      }
+    })
   }
 
   return (

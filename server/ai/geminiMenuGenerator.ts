@@ -1,10 +1,11 @@
 import { GoogleGenAI } from '@google/genai'
 import type { EventMenu } from '../../shared/menu.js'
 import type { MenuGenerationInput, MenuGenerator } from './menuGenerator.js'
-import { generateStructuredJson } from './gemini.js'
+import { generateStructuredJson, StructuredOutputValidationError } from './gemini.js'
 import { generatedMenuJsonSchema, generatedMenuSchema } from '../schemas/menu.js'
 import { normalizeMenu } from '../schemas/normalizeMenu.js'
 import { assertNoDerivedPlanningNumbers } from '../schemas/menuPlanningPolicy.js'
+import { logDevelopmentServer } from '../observability/logger.js'
 
 const SYSTEM_INSTRUCTION = `You are Eventa's professional catering menu planner.
 Create a realistic, concise catering menu appropriate for the confirmed event facts supplied by Eventa.
@@ -25,36 +26,67 @@ export class GeminiMenuGenerator implements MenuGenerator {
   constructor(
     apiKey: string,
     private readonly model: string,
+    private readonly structuredJsonGenerator: typeof generateStructuredJson = generateStructuredJson,
   ) {
     this.client = new GoogleGenAI({ apiKey })
   }
 
   async generate(input: MenuGenerationInput): Promise<EventMenu> {
-    for (let attempt = 0; ; attempt += 1) {
-      const parsedJson = await generateStructuredJson({
-        client: this.client,
-        model: this.model,
-        systemInstruction: SYSTEM_INSTRUCTION,
-        contents: JSON.stringify({
-          confirmedEvent: input.event,
-          originalDescription: input.originalDescription ?? null,
-          ...(attempt > 0
-            ? { correction: 'The previous proposal contained a derived numeric allocation. Regenerate without arithmetic or derived subgroup counts in planningAssumptions.' }
-            : {}),
-        }),
-        responseJsonSchema: generatedMenuJsonSchema,
-        temperature: 0.35,
-      })
-
-      const validated = generatedMenuSchema.parse(parsedJson)
-      const menu = normalizeMenu(validated)
+    for (let regenerationAttempt = 1; regenerationAttempt <= 2; regenerationAttempt += 1) {
+      let parsedJson: unknown
+      let geminiAttempt: number
 
       try {
+        const result = await this.structuredJsonGenerator({
+          client: this.client,
+          model: this.model,
+          systemInstruction: SYSTEM_INSTRUCTION,
+          contents: JSON.stringify({
+            confirmedEvent: input.event,
+            originalDescription: input.originalDescription ?? null,
+            ...(regenerationAttempt > 1
+              ? { correction: 'The previous proposal did not satisfy Eventa\'s validated menu contract. Regenerate a clean menu without derived allocations and follow the response schema exactly.' }
+              : {}),
+          }),
+          responseJsonSchema: generatedMenuJsonSchema,
+          temperature: 0.35,
+          endpoint: '/api/generate-menu',
+          regenerationAttempt,
+        })
+        parsedJson = result.value
+        geminiAttempt = result.geminiAttempt
+      } catch (error) {
+        if (!(error instanceof StructuredOutputValidationError)) throw error
+        logDevelopmentServer('warn', {
+          endpoint: '/api/generate-menu',
+          geminiAttempt: error.geminiAttempt,
+          regenerationAttempt,
+          status: 200,
+          errorCategory: 'structured_output_validation',
+          ...(regenerationAttempt === 1 ? { retryDelayMs: 0 } : {}),
+        })
+        if (regenerationAttempt >= 2) throw error
+        continue
+      }
+
+      try {
+        const validated = generatedMenuSchema.parse(parsedJson)
+        const menu = normalizeMenu(validated)
         assertNoDerivedPlanningNumbers(input, menu)
         return menu
-      } catch (error) {
-        if (attempt >= 1) throw error
+      } catch {
+        logDevelopmentServer('warn', {
+          endpoint: '/api/generate-menu',
+          geminiAttempt,
+          regenerationAttempt,
+          status: 200,
+          errorCategory: 'structured_output_validation',
+          ...(regenerationAttempt === 1 ? { retryDelayMs: 0 } : {}),
+        })
+        if (regenerationAttempt >= 2) throw new StructuredOutputValidationError()
       }
     }
+
+    throw new Error('Menu corrective regeneration ended unexpectedly')
   }
 }

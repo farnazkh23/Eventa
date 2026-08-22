@@ -14,6 +14,7 @@
     "test": "vitest run",
     "verify:ai": "tsx server/scripts/verifyAi.ts",
     "verify:menus": "tsx server/scripts/verifyMenus.ts",
+    "verify:flow-reliability": "tsx server/scripts/verifyFlowReliability.ts",
     "verify:quantities": "tsx server/scripts/verifyQuantities.ts"
   },
   "dependencies": {
