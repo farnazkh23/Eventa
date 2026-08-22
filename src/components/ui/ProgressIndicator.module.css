@@ -1,0 +1,32 @@
+.wrapper {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-5);
+  min-height: 58px;
+  padding: 0 var(--space-5);
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.42);
+}
+
+.track {
+  height: 8px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: #edf0f5;
+}
+
+.fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-brand);
+  transition: width 240ms ease;
+}
+
+.label {
+  color: var(--color-text-muted);
+  font-size: 0.94rem;
+  white-space: nowrap;
+}

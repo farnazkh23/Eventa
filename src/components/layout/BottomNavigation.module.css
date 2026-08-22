@@ -1,0 +1,44 @@
+.nav {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.2rem;
+  padding: 0.85rem 1rem max(0.85rem, env(safe-area-inset-bottom));
+  border-top: 1px solid rgba(255, 255, 255, 0.94);
+  background: rgba(255, 255, 255, 0.91);
+  box-shadow: 0 -12px 30px rgba(64, 75, 100, 0.06);
+  backdrop-filter: blur(18px);
+}
+
+.item {
+  position: relative;
+  display: grid;
+  min-height: 56px;
+  place-items: center;
+  gap: 0.28rem;
+  border: 0;
+  color: var(--color-text-muted);
+  background: transparent;
+  font-size: 0.76rem;
+}
+
+.item:disabled {
+  cursor: default;
+  opacity: 1;
+}
+
+.active {
+  color: var(--color-brand);
+}
+
+.active::after {
+  position: absolute;
+  bottom: -0.45rem;
+  width: 34px;
+  height: 4px;
+  border-radius: var(--radius-pill);
+  background: var(--color-brand);
+  content: '';
+}

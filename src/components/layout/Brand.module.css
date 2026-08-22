@@ -1,0 +1,24 @@
+.brand {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.wordmark {
+  color: var(--color-text);
+  font-size: 2.7rem;
+  font-weight: 350;
+  letter-spacing: -0.095em;
+  line-height: 0.82;
+}
+
+.wordmark span,
+.endorsement {
+  color: var(--color-brand);
+}
+
+.endorsement {
+  margin-top: 0.38rem;
+  font-size: 0.72rem;
+  font-weight: 520;
+}

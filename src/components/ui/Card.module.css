@@ -1,0 +1,17 @@
+.card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.default {
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: var(--shadow-card);
+}
+
+.soft {
+  background: rgba(241, 244, 249, 0.76);
+}
+
+.success {
+  background: var(--color-success-soft);
+}

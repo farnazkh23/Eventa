@@ -1,0 +1,45 @@
+.button {
+  min-height: 56px;
+  border: 0;
+  cursor: pointer;
+  font-weight: 650;
+  transition: transform 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
+}
+
+.button:not(:disabled):active {
+  transform: scale(0.985);
+}
+
+.primary {
+  padding: 0.9rem 1.5rem;
+  border-radius: var(--radius-pill);
+  color: #fff;
+  background: var(--color-brand);
+  box-shadow: var(--shadow-button);
+  font-size: 1.08rem;
+}
+
+.primary:hover:not(:disabled) {
+  background: var(--color-brand-hover);
+  box-shadow: 0 12px 24px rgba(206, 0, 40, 0.26);
+}
+
+.text {
+  min-height: 44px;
+  padding: 0.5rem 0.25rem;
+  color: var(--color-text);
+  background: transparent;
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-color: var(--color-text-soft);
+  text-decoration-style: dashed;
+  text-underline-offset: 0.35rem;
+}
+
+.text:hover:not(:disabled) {
+  color: var(--color-brand);
+}
+
+.fullWidth {
+  width: 100%;
+}
