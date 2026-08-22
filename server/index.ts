@@ -73,8 +73,8 @@ const server = createServer(async (request, response) => {
 
 server.requestTimeout = 300_000
 server.timeout = 300_000
-server.listen(config.port, '127.0.0.1', () => {
-  logServer('info', { operation: 'server_started', status: 200, port: config.port, aiConfigured: provider !== null, aiProvider: provider?.name ?? config.aiProvider })
+server.listen(config.port, '0.0.0.0', () => {
+  logServer('info', { operation: 'server_started', status: 200, host: '0.0.0.0', port: config.port, aiConfigured: provider !== null, aiProvider: provider?.name ?? config.aiProvider })
 })
 
 function shutdown() { server.close(() => process.exit(0)) }

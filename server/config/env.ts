@@ -7,6 +7,17 @@ const DEFAULT_KICONNECT_MODEL = 'mistralai-mistral-small-4-119b'
 const DEFAULT_KICONNECT_FALLBACK_MODEL = 'gpt-oss-120b'
 const DEFAULT_PORT = 8787
 
+function positivePort(value: string | undefined): number | null {
+  const parsed = Number.parseInt(value ?? '', 10)
+  return Number.isSafeInteger(parsed) && parsed > 0 && parsed <= 65_535 ? parsed : null
+}
+
+export function resolveServerPort(environment: NodeJS.ProcessEnv): number {
+  return positivePort(environment.PORT)
+    ?? positivePort(environment.EVENTA_API_PORT)
+    ?? DEFAULT_PORT
+}
+
 export interface ServerConfig {
   aiProvider: 'gemini' | 'kiconnect'
   geminiApiKey: string | null
@@ -24,7 +35,6 @@ export interface ServerConfig {
 export function loadServerConfig(): ServerConfig {
   loadDotEnv({ path: resolve(process.cwd(), '.env.local'), quiet: true })
 
-  const parsedPort = Number.parseInt(process.env.EVENTA_API_PORT ?? '', 10)
   const configuredProvider = process.env.AI_PROVIDER?.trim().toLocaleLowerCase('en')
   const configuredKiconnectModel = process.env.KICONNECT_MODEL?.trim()
   const configuredKiconnectFallbackModel = process.env.KICONNECT_FALLBACK_MODEL?.trim()
@@ -45,7 +55,7 @@ export function loadServerConfig(): ServerConfig {
     kiconnectFallbackModel: configuredKiconnectFallbackModel
       ? kiconnectModelAliases[configuredKiconnectFallbackModel.toLocaleLowerCase('en')] ?? configuredKiconnectFallbackModel
       : DEFAULT_KICONNECT_FALLBACK_MODEL,
-    port: Number.isSafeInteger(parsedPort) && parsedPort > 0 ? parsedPort : DEFAULT_PORT,
+    port: resolveServerPort(process.env),
     aiCacheEnabled: process.env.EVENTA_AI_CACHE_ENABLED !== 'false',
     aiCacheTtlMs: 5 * 60_000,
     aiCacheMaxEntries: 100,
