@@ -8,7 +8,7 @@ import { normalizeMenu } from '../schemas/normalizeMenu.js'
 import { logDevelopmentServer } from '../observability/logger.js'
 import type { AIProvider } from './aiProvider.js'
 import { EVENT_INTERPRETATION_SYSTEM_INSTRUCTION } from './geminiEventInterpreter.js'
-import { MENU_GENERATION_SYSTEM_INSTRUCTION } from './geminiMenuGenerator.js'
+import { createMenuPromptContents, MENU_GENERATION_SYSTEM_INSTRUCTION } from './geminiMenuGenerator.js'
 import { generateKiconnectStructuredJson, KiconnectApiError, KiconnectStructuredOutputError, type KiconnectAttemptEvent } from './kiconnect.js'
 import type { MenuGenerationInput } from './menuGenerator.js'
 
@@ -37,6 +37,7 @@ export class KiconnectProvider implements AIProvider {
           contents: regenerationAttempt === 1 ? description : `${description}\n\nCorrection: return every required Eventa field exactly as specified by the schema, with no extra fields.`,
           responseJsonSchema: eventInterpretationJsonSchema,
           schemaName: 'event_interpretation', endpoint: '/api/interpret-event', temperature: 0.1,
+          maxOutputTokens: 1_200,
           ...this.options,
         })
         return normalizeEventInterpretation(eventInterpretationSchema.parse(value))
@@ -55,13 +56,10 @@ export class KiconnectProvider implements AIProvider {
         const value = await generateKiconnectStructuredJson({
           apiKey: this.apiKey, baseUrl: this.baseUrl, model: this.model,
           systemInstruction: MENU_GENERATION_SYSTEM_INSTRUCTION,
-          contents: JSON.stringify({
-            confirmedEvent: input.event,
-            originalDescription: input.originalDescription ?? null,
-            ...(regenerationAttempt > 1 ? { correction: 'Regenerate the menu with positive per-serving quantities and supported units for every quantifiable ingredient, correct dietary_option scopes and dietary main-course coverage, course values that describe meal position, no event totals, and no derived allocations.' } : {}),
-          }),
+          contents: createMenuPromptContents(input, regenerationAttempt > 1),
           responseJsonSchema: generatedMenuJsonSchema,
           schemaName: 'event_menu', endpoint: '/api/generate-menu', temperature: 0.35,
+          maxOutputTokens: 4_500,
           ...this.options,
         })
         const menu = normalizeMenu(generatedMenuSchema.parse(value))

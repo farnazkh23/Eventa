@@ -5,6 +5,7 @@ import { GeminiProvider } from './ai/geminiProvider.js'
 import { KiconnectProvider } from './ai/kiconnectProvider.js'
 import { KiconnectFailoverProvider } from './ai/kiconnectFailoverProvider.js'
 import { handleCalculateQuantities } from './api/calculateQuantities.js'
+import { handleCreatePurchasingPlan } from './api/createPurchasingPlan.js'
 import { handleGenerateMenu } from './api/generateMenu.js'
 import { sendAppError, sendJson } from './api/http.js'
 import { handleInterpretEvent } from './api/interpretEvent.js'
@@ -55,6 +56,9 @@ const server = createServer(async (request, response) => {
     }
     if (request.method === 'POST' && url.pathname === '/api/match-products') {
       operation = 'match_products'; await handleMatchProducts(request, response); return
+    }
+    if (request.method === 'POST' && url.pathname === '/api/create-purchasing-plan') {
+      operation = 'create_purchasing_plan'; await handleCreatePurchasingPlan(request, response); return
     }
     throw new AppError('NOT_FOUND')
   } catch (error) {

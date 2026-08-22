@@ -84,6 +84,9 @@ export function normalizeMenu(input: GeneratedMenu): EventMenu {
           unit: ingredient.unit ? normalizeUnit(ingredient.unit) : null,
         })),
         servingScope: item.servingScope,
+        dietaryAllocationType: item.dietaryAllocationType
+          ? normalizeWhitespace(item.dietaryAllocationType).toLocaleLowerCase('en')
+          : null,
       }
     }),
     planningAssumptions: normalizeList(input.planningAssumptions, false),

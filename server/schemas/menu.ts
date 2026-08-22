@@ -34,6 +34,7 @@ export const generatedMenuItemSchema = z
     portion: portionSchema.nullable(),
     ingredients: z.array(ingredientSchema).min(1).max(40),
     servingScope: servingScopeSchema,
+    dietaryAllocationType: z.string().trim().min(1).max(80).nullable().default(null),
   })
   .strict()
 
@@ -116,6 +117,10 @@ export const generatedMenuJsonSchema = toGeminiJsonSchema({
             type: 'string',
             enum: ['all_guests', 'dietary_option', 'shared'],
           },
+          dietaryAllocationType: {
+            description: 'For dietary_option, the one confirmed dietary requirement whose guests receive this substitute, such as vegan. Otherwise null. Compatibility belongs in dietaryTags.',
+            anyOf: [{ type: 'string' }, { type: 'null' }],
+          },
         },
         required: [
           'course',
@@ -125,6 +130,7 @@ export const generatedMenuJsonSchema = toGeminiJsonSchema({
           'portion',
           'ingredients',
           'servingScope',
+          'dietaryAllocationType',
         ],
       },
     },

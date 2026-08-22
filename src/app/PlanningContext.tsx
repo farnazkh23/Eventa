@@ -6,7 +6,8 @@ import {
   emptyEventInterpretation,
 } from '../services/eventInterpretationMapper'
 import { interpretEvent, InterpretEventServiceError } from '../services/interpretEvent'
-import { generateMenu, GenerateMenuServiceError } from '../services/generateMenu'
+import { GenerateMenuServiceError } from '../services/generateMenu'
+import { MenuPrefetch } from '../services/menuPrefetch'
 import { SingleFlight } from '../services/singleFlight'
 import type { EventInterpretation } from '../../shared/eventInterpretation'
 import type { EventMenu } from '../../shared/menu'
@@ -109,12 +110,17 @@ const PlanningContext = createContext<PlanningContextValue | null>(null)
 export function PlanningProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, initialState)
   const menuGeneration = useRef(new SingleFlight())
+  const menuPrefetch = useRef(new MenuPrefetch())
 
   async function interpretBrief() {
     dispatch({ type: 'interpretStart' })
+    const brief = state.brief
     try {
-      const result = await interpretEvent(state.brief)
+      const result = await interpretEvent(brief)
       dispatch({ type: 'interpretSuccess', event: result, interpretation: toInterpretationFields(result) })
+      // Start the expensive request while the user reviews the interpretation.
+      // MenuPrefetch absorbs background failures and only reuses this exact event.
+      void menuPrefetch.current.request(result, brief)
     } catch (error) {
       const message = error instanceof InterpretEventServiceError
         ? error.message
@@ -128,7 +134,7 @@ export function PlanningProvider({ children }: { children: ReactNode }) {
     return menuGeneration.current.run(async () => {
       dispatch({ type: 'menuStart' })
       try {
-        const menu = await generateMenu(state.confirmedEvent, state.brief)
+        const menu = await menuPrefetch.current.request(state.confirmedEvent, state.brief)
         dispatch({ type: 'menuSuccess', menu })
       } catch (error) {
         const message = error instanceof GenerateMenuServiceError

@@ -178,6 +178,28 @@ describe('calculateQuantityPlan serving allocation', () => {
     expect(allocation(plan, 'standard')?.plannedServings).toBeNull()
   })
 
+  it('uses an explicit dietary allocation audience while retaining compatibility tags', () => {
+    const plan = calculateQuantityPlan({
+      event: event(35, [
+        { type: 'gluten-free', guestCount: 3 },
+        { type: 'vegan', guestCount: 2 },
+      ]),
+      menu: menu([
+        item({ id: 'standard', name: 'Standard main' }),
+        item({
+          id: 'vegan',
+          name: 'Gluten-free vegan main',
+          dietaryTags: ['vegan', 'gluten-free'],
+          servingScope: 'dietary_option',
+          dietaryAllocationType: 'vegan',
+        }),
+      ]),
+    })
+
+    expect(allocation(plan, 'vegan')?.plannedServings).toBe(2)
+    expect(allocation(plan, 'standard')?.plannedServings).toBe(33)
+  })
+
   it('does not treat a whole-course dietary compatibility tag as another allocation audience', () => {
     const plan = calculateQuantityPlan({
       event: event(35, [

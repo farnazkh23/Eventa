@@ -7,21 +7,28 @@ import { normalizeMenu } from '../schemas/normalizeMenu.js'
 import { assertMenuPlanningPolicy } from '../schemas/menuPlanningPolicy.js'
 import { logDevelopmentServer } from '../observability/logger.js'
 
-export const MENU_GENERATION_SYSTEM_INSTRUCTION = `You are Eventa's professional catering menu planner.
-Create a realistic, concise catering menu appropriate for the confirmed event facts supplied by Eventa.
-Use event type, guest count, location, meal type, service style, dietary requirements, known budget level, and additional requirements when they are present.
-Do not invent event facts. Menu choices, portions, and ingredient amounts are planning recommendations, not facts.
-Do not produce recipes, cooking instructions, total quantities, package counts, prices, shopping lists, or specific Transgourmet products.
-Keep ingredient names concise, generic, and suitable for later catalogue matching.
-Portion and ingredient amounts must be per-serving recommendations only. Never multiply them by guest count.
-Every ingredient that contributes to deterministic purchasing quantities must include a positive amountPerServing and exactly one supported unit: g, kg, ml, l, or piece. Do not omit beverage quantities. Use null only when an ingredient genuinely cannot be quantified, and prefer a quantifiable menu description instead.
-Respect every dietary requirement with a suitable menu item or an all-guest menu choice.
-When the menu includes main courses, provide a compatible main-course choice for every confirmed dietary requirement. If other main courses are not compatible, mark the dedicated alternative as servingScope "dietary_option"; never label a named vegetarian, vegan, or gluten-free alternative "all_guests" unless every guest is intended to receive it.
-The course field describes the item's meal position, never its dietary audience. A vegetarian or vegan main uses course "main" plus the relevant dietaryTags and servingScope. A vegan dessert uses course "dessert", and a dietary beverage uses course "beverage".
-Read each dietary requirement's guestCount from the confirmed event. If it is null, do not guess it. Use servingScope "dietary_option" for the option and add a transparent planning assumption that allocation will be confirmed during quantity planning.
-If a dietary requirement has a non-null guestCount, use that exact supported count when tailoring the menu and optionally acknowledge it in planningAssumptions, without calculating purchase quantities or any other guest-group allocation.
-Never subtract a dietary guest count from the total guest count. Never state or derive a number of standard meals, portions, dishes, packages, or allocations. For example, if 4 vegan guests are stated among 35 guests, acknowledge only the supported count of 4 vegan guests and defer every allocation to quantity planning.
-Keep the menu materially tailored to the event rather than returning a generic default menu.`
+export const MENU_GENERATION_SYSTEM_INSTRUCTION = `You are Eventa's professional catering menu planner. Create a concise, realistic menu tailored only to supplied confirmed event facts. Choices and per-serving quantities are recommendations.
+Return {title, summary, items, planningAssumptions}. Each item needs {course, name, description, dietaryTags, portion, ingredients, servingScope, dietaryAllocationType}; each ingredient needs {name, amountPerServing, unit}.
+Never output recipes, instructions, event totals, derived allocations, packs, prices, shopping lists, or branded products. Use concise generic ingredient names. Every quantifiable ingredient, including beverages, needs a positive per-serving amount and exactly one unit: g, kg, ml, l, or piece. Use null amount/unit only when genuinely unquantifiable. Never multiply by guest count.
+Respect every dietary requirement with a compatible choice. Dietary properties belong in dietaryTags, not course: vegetarian/vegan mains use course "main". A genuine dietary substitute uses servingScope "dietary_option" and dietaryAllocationType equal to exactly one confirmed requirement. All compatibility remains in dietaryTags. Ordinary sides use all_guests/shared. Other items use dietaryAllocationType null.
+When dietary main alternatives exist, the standard main must be all_guests, never shared. Never subtract dietary counts or derive standard servings. Known dietary counts may guide the option; unknown counts must never be guessed and require a transparent confirmation note in planningAssumptions. Keep the result materially event-specific.`
+
+function compactConfirmedEvent(input: MenuGenerationInput): Record<string, unknown> {
+  return Object.fromEntries(Object.entries(input.event).filter(([, value]) =>
+    value !== null && (!Array.isArray(value) || value.length > 0)))
+}
+
+export function createMenuPromptContents(
+  input: MenuGenerationInput,
+  correctiveRegeneration: boolean,
+): string {
+  return JSON.stringify({
+    event: compactConfirmedEvent(input),
+    ...(correctiveRegeneration
+      ? { correction: 'Fix all schema/policy violations: quantities/units, dietary allocation type and scopes, main coverage, course semantics, and no derived totals.' }
+      : {}),
+  })
+}
 
 export class GeminiMenuGenerator implements MenuGenerator {
   private readonly client: GoogleGenAI
@@ -44,13 +51,7 @@ export class GeminiMenuGenerator implements MenuGenerator {
           client: this.client,
           model: this.model,
           systemInstruction: MENU_GENERATION_SYSTEM_INSTRUCTION,
-          contents: JSON.stringify({
-            confirmedEvent: input.event,
-            originalDescription: input.originalDescription ?? null,
-            ...(regenerationAttempt > 1
-              ? { correction: 'The previous proposal did not satisfy Eventa\'s validated menu contract. Regenerate it with positive per-serving quantities and supported units for every quantifiable ingredient, correct dietary_option scopes and dietary main-course coverage, course values that describe meal position, no event totals, and no derived allocations.' }
-              : {}),
-          }),
+          contents: createMenuPromptContents(input, regenerationAttempt > 1),
           responseJsonSchema: generatedMenuJsonSchema,
           temperature: 0.35,
           endpoint: '/api/generate-menu',

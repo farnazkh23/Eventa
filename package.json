@@ -18,8 +18,10 @@
     "verify:quantities": "tsx server/scripts/verifyQuantities.ts",
     "verify:kiconnect-quantities": "tsx server/scripts/verifyKiconnectQuantityFlow.ts",
     "verify:kiconnect-pipeline": "tsx server/scripts/verifyKiconnectQuantityFlow.ts",
+    "verify:purchasing": "tsx server/scripts/verifyKiconnectQuantityFlow.ts",
     "verify:products": "tsx server/scripts/verifyProductMatching.ts",
-    "benchmark:kiconnect": "tsx server/scripts/benchmarkKiconnect.ts"
+    "benchmark:kiconnect": "tsx server/scripts/benchmarkKiconnect.ts",
+    "benchmark:menu-latency": "tsx server/scripts/benchmarkMenuLatency.ts"
   },
   "dependencies": {
     "@google/genai": "^2.18.0",

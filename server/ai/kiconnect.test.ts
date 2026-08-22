@@ -5,6 +5,7 @@ const request = {
   apiKey: 'safe-test-key', baseUrl: 'https://example.test/api/v1', model: 'exact-model-id',
   systemInstruction: 'Return an object.', contents: 'Test', responseJsonSchema: { type: 'object' },
   schemaName: 'test_schema', endpoint: '/api/interpret-event' as const, temperature: 0.1,
+  maxOutputTokens: 1_234,
 }
 
 describe('KI:connect structured transport', () => {
@@ -16,8 +17,14 @@ describe('KI:connect structured transport', () => {
     await expect(generateKiconnectStructuredJson({ ...request, fetchImplementation })).resolves.toEqual({ ok: true })
     const [url, init] = fetchImplementation.mock.calls[0] ?? []
     expect(url).toBe('https://example.test/api/v1/chat/completions')
-    const body = JSON.parse(String(init?.body)) as { model: string; response_format: { type: string; json_schema: { strict: boolean } } }
-    expect(body).toMatchObject({ model: 'exact-model-id', response_format: { type: 'json_schema', json_schema: { strict: true } } })
+    const body = JSON.parse(String(init?.body)) as {
+      model: string
+      max_tokens: number
+      messages: Array<{ content: string }>
+      response_format: { type: string; json_schema: { strict: boolean } }
+    }
+    expect(body).toMatchObject({ model: 'exact-model-id', max_tokens: 1_234, response_format: { type: 'json_schema', json_schema: { strict: true } } })
+    expect(body.messages[0]?.content).toContain(JSON.stringify(request.responseJsonSchema))
     expect(String((init?.headers as Record<string, string>).Authorization)).toBe('Bearer safe-test-key')
   })
 

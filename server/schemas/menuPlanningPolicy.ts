@@ -54,6 +54,21 @@ export function assertMenuPlanningPolicy(
     if (item.course === 'vegetarian' || item.course === 'vegan') {
       issues.push(`${item.name}: dietary properties belong in dietaryTags; use main as the course`)
     }
+    const allocationType = item.dietaryAllocationType
+      ? normalizeDietaryValue(item.dietaryAllocationType)
+      : null
+    if (item.servingScope === 'dietary_option') {
+      if (allocationType === null) {
+        issues.push(`${item.name}: dietary_option requires one dietaryAllocationType`)
+      } else if (!item.dietaryTags.map(normalizeDietaryValue).includes(allocationType)) {
+        issues.push(`${item.name}: dietaryAllocationType must also appear in dietaryTags`)
+      } else if (!input.event.dietaryRequirements.some((requirement) =>
+        normalizeDietaryValue(requirement.type) === allocationType)) {
+        issues.push(`${item.name}: dietaryAllocationType does not match a confirmed requirement`)
+      }
+    } else if (allocationType !== null) {
+      issues.push(`${item.name}: dietaryAllocationType is only valid for dietary_option`)
+    }
     for (const ingredient of item.ingredients) {
       const hasAmount = ingredient.amountPerServing !== null
       const hasUnit = ingredient.unit !== null
@@ -71,15 +86,28 @@ export function assertMenuPlanningPolicy(
     item.course === 'main' || item.course === 'vegetarian' || item.course === 'vegan')
 
   if (mainItems.length > 0) {
+    const hasDietaryMainAlternative = mainItems.some((item) => item.servingScope === 'dietary_option')
+    if (hasDietaryMainAlternative) {
+      mainItems
+        .filter((item) => item.servingScope === 'shared')
+        .forEach((item) => issues.push(
+          `${item.name}: a standard main alongside dietary alternatives must use all_guests so deterministic subtraction can be applied`,
+        ))
+    }
     for (const requirement of input.event.dietaryRequirements) {
       const compatibleItems = mainItems.filter((item) => itemSupportsDietaryType(item, requirement.type))
       const incompatibleItems = mainItems.filter((item) => !itemSupportsDietaryType(item, requirement.type))
+      const requirementType = normalizeDietaryValue(requirement.type)
 
       if (compatibleItems.length === 0) {
         issues.push(`No main-course option supports dietary requirement ${requirement.type}`)
       } else if (
         incompatibleItems.length > 0
-        && !compatibleItems.some((item) => item.servingScope === 'dietary_option')
+        && !compatibleItems.some((item) =>
+          item.servingScope === 'dietary_option'
+          && item.dietaryAllocationType !== null
+          && item.dietaryAllocationType !== undefined
+          && normalizeDietaryValue(item.dietaryAllocationType) === requirementType)
       ) {
         issues.push(`The ${requirement.type} main-course alternative must use dietary_option serving scope`)
       }

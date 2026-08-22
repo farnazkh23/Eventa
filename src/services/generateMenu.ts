@@ -21,6 +21,7 @@ const menuSchema = z.object({
       unit: z.string().min(1).nullable(),
     })),
     servingScope: z.enum(['all_guests', 'dietary_option', 'shared']),
+    dietaryAllocationType: z.string().min(1).nullable().optional(),
   })).min(2),
   planningAssumptions: z.array(z.string()),
 })
@@ -32,16 +33,26 @@ export class GenerateMenuServiceError extends Error {
   }
 }
 
-export async function generateMenu(
+export function createGenerateMenuRequest(
   event: EventInterpretation,
   originalDescription: string,
+): GenerateMenuRequest {
+  const description = originalDescription.trim()
+  return {
+    event,
+    ...(description ? { originalDescription: description } : {}),
+  }
+}
+
+/** Stable browser key; the server SHA-256 hashes this same normalized request body. */
+export function generateMenuRequestKey(request: GenerateMenuRequest): string {
+  return JSON.stringify(request)
+}
+
+export async function generateMenuRequest(
+  request: GenerateMenuRequest,
   fetchImplementation: typeof fetch = fetch,
 ): Promise<EventMenu> {
-  const request: GenerateMenuRequest = {
-    event,
-    ...(originalDescription.trim() ? { originalDescription } : {}),
-  }
-
   let response: Response
   try {
     response = await fetchImplementation('/api/generate-menu', {
@@ -65,4 +76,15 @@ export async function generateMenu(
   } catch {
     throw new GenerateMenuServiceError('Eventa received an invalid menu. Please try again.')
   }
+}
+
+export function generateMenu(
+  event: EventInterpretation,
+  originalDescription: string,
+  fetchImplementation: typeof fetch = fetch,
+): Promise<EventMenu> {
+  return generateMenuRequest(
+    createGenerateMenuRequest(event, originalDescription),
+    fetchImplementation,
+  )
 }

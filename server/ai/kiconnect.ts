@@ -44,6 +44,7 @@ export interface KiconnectStructuredRequest {
   schemaName: string
   endpoint: KiconnectEndpoint
   temperature: number
+  maxOutputTokens: number
   fetchImplementation?: typeof fetch
   onAttempt?: (event: KiconnectAttemptEvent) => void
   sleep?: (milliseconds: number) => Promise<void>
@@ -93,12 +94,12 @@ export async function generateKiconnectStructuredJson(request: KiconnectStructur
           messages: [
             {
               role: 'system',
-              content: `${request.systemInstruction}\n\nReturn exactly one JSON object matching the following JSON Schema. Include every required property, using null or [] where instructed. Do not add properties and do not use markdown fences.\n${JSON.stringify(request.responseJsonSchema)}`,
+              content: `${request.systemInstruction}\nReturn exactly one JSON object matching this schema; include every required property, do not add properties, and do not use markdown:\n${JSON.stringify(request.responseJsonSchema)}`,
             },
             { role: 'user', content: request.contents },
           ],
           temperature: request.temperature,
-          max_tokens: 6_000,
+          max_tokens: request.maxOutputTokens,
           response_format: {
             type: 'json_schema',
             json_schema: { name: request.schemaName, strict: true, schema: request.responseJsonSchema },

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { GeneratedMenu } from '../schemas/menu.js'
-import { GeminiMenuGenerator } from './geminiMenuGenerator.js'
+import { createMenuPromptContents, GeminiMenuGenerator } from './geminiMenuGenerator.js'
 import type { MenuGenerationInput } from './menuGenerator.js'
 import type { generateStructuredJson } from './gemini.js'
 
@@ -32,6 +32,7 @@ const validMenu: GeneratedMenu = {
       portion: { amount: 180, unit: 'g' },
       ingredients: [{ name: 'chicken', amountPerServing: 180, unit: 'g' }],
       servingScope: 'all_guests',
+      dietaryAllocationType: null,
     },
     {
       course: 'main',
@@ -41,12 +42,25 @@ const validMenu: GeneratedMenu = {
       portion: { amount: 280, unit: 'g' },
       ingredients: [{ name: 'risotto rice', amountPerServing: 90, unit: 'g' }],
       servingScope: 'dietary_option',
+      dietaryAllocationType: 'vegan',
     },
   ],
   planningAssumptions: ['4 vegan guests were specified; allocation is deferred.'],
 }
 
 describe('GeminiMenuGenerator corrective regeneration', () => {
+  it('uses only compact confirmed facts in the model request', () => {
+    const contents = createMenuPromptContents({
+      ...input,
+      originalDescription: 'Redundant source prose that has already been interpreted.',
+    }, false)
+
+    expect(contents).toContain('"guestCount":35')
+    expect(contents).not.toContain('Redundant source prose')
+    expect(contents).not.toContain('"date":null')
+    expect(contents).not.toContain('correction')
+  })
+
   it('allows one clean regeneration after menu schema validation fails', async () => {
     const generate = vi.fn<typeof generateStructuredJson>()
       .mockResolvedValueOnce({ value: { title: 'Incomplete' }, geminiAttempt: 1 })

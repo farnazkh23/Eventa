@@ -35,6 +35,8 @@ export interface MenuItem {
   portion: MenuPortion | null
   ingredients: MenuIngredient[]
   servingScope: MenuServingScope
+  /** Explicit audience for dietary_option; tags remain compatibility metadata. */
+  dietaryAllocationType?: string | null
 }
 
 export interface EventMenu {

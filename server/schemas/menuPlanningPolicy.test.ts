@@ -56,6 +56,7 @@ describe('assertMenuPlanningPolicy', () => {
     const menu = plannedMenu([item({
       dietaryTags: ['vegan'],
       servingScope: 'dietary_option',
+      dietaryAllocationType: 'vegan',
       ingredients: [{ name: 'sparkling water', amountPerServing: null, unit: null }],
     })])
 
@@ -67,13 +68,13 @@ describe('assertMenuPlanningPolicy', () => {
 
   it('always rejects mismatched or unsupported quantity metadata', () => {
     expect(() => assertMenuPlanningPolicy(input, plannedMenu([
-      item({ dietaryTags: ['vegan'], servingScope: 'dietary_option', ingredients: [
+      item({ dietaryTags: ['vegan'], servingScope: 'dietary_option', dietaryAllocationType: 'vegan', ingredients: [
         { name: 'oil', amountPerServing: 10, unit: null },
       ] }),
     ]), { allowMissingIngredientQuantities: true })).toThrow('must provide both')
 
     expect(() => assertMenuPlanningPolicy(input, plannedMenu([
-      item({ dietaryTags: ['vegan'], servingScope: 'dietary_option', ingredients: [
+      item({ dietaryTags: ['vegan'], servingScope: 'dietary_option', dietaryAllocationType: 'vegan', ingredients: [
         { name: 'oil', amountPerServing: 1, unit: 'tablespoon' },
       ] }),
     ]), { allowMissingIngredientQuantities: true })).toThrow('unsupported unit')
@@ -103,10 +104,28 @@ describe('assertMenuPlanningPolicy', () => {
         name: 'Vegan risotto',
         dietaryTags: ['vegan'],
         servingScope: 'dietary_option',
+        dietaryAllocationType: 'vegan',
       }),
     ])
 
     expect(() => assertMenuPlanningPolicy(input, menu)).not.toThrow()
+  })
+
+  it('rejects a shared standard main when dietary alternatives require deterministic subtraction', () => {
+    const menu = plannedMenu([
+      item({ servingScope: 'shared' }),
+      item({
+        id: 'vegan',
+        name: 'Vegan risotto',
+        dietaryTags: ['vegan'],
+        servingScope: 'dietary_option',
+        dietaryAllocationType: 'vegan',
+      }),
+    ])
+
+    expect(() => assertMenuPlanningPolicy(input, menu)).toThrow(
+      'standard main alongside dietary alternatives must use all_guests',
+    )
   })
 
   it('does not use a vegan option to hide an incorrectly scoped vegetarian alternative', () => {
@@ -128,6 +147,7 @@ describe('assertMenuPlanningPolicy', () => {
         name: 'Vegan risotto',
         dietaryTags: ['vegan'],
         servingScope: 'dietary_option',
+        dietaryAllocationType: 'vegan',
       }),
     ])
 

@@ -36,6 +36,14 @@ function relevantRequirements(
   menuItems: MenuItem[],
 ): DietaryRequirement[] {
   const tags = new Set(item.dietaryTags.map(normalizedText))
+  const explicitAudience = item.dietaryAllocationType
+    ? normalizedText(item.dietaryAllocationType)
+    : null
+  if (explicitAudience !== null) {
+    return requirements
+      .filter((requirement) => normalizedText(requirement.type) === explicitAudience)
+      .map((requirement) => ({ type: explicitAudience, guestCount: requirement.guestCount }))
+  }
   const unique = new Map<string, DietaryRequirement>()
 
   requirements.forEach((requirement) => {

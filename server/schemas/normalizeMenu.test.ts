@@ -16,6 +16,7 @@ const rawMenu = {
         { name: ' Olive Oil ', amountPerServing: 5, unit: 'milliliters' },
       ],
       servingScope: 'shared' as const,
+      dietaryAllocationType: null,
     },
     {
       course: 'dessert' as const,
@@ -25,6 +26,7 @@ const rawMenu = {
       portion: null,
       ingredients: [{ name: 'Cream', amountPerServing: null, unit: null }],
       servingScope: 'all_guests' as const,
+      dietaryAllocationType: null,
     },
   ],
   planningAssumptions: [' Portions are per guest. ', 'Portions are per guest.'],
