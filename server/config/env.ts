@@ -27,6 +27,7 @@ export interface ServerConfig {
   kiconnectModel: string
   kiconnectFallbackModel: string
   port: number
+  frontendOrigin: string | null
   aiCacheEnabled: boolean
   aiCacheTtlMs: number
   aiCacheMaxEntries: number
@@ -56,6 +57,7 @@ export function loadServerConfig(): ServerConfig {
       ? kiconnectModelAliases[configuredKiconnectFallbackModel.toLocaleLowerCase('en')] ?? configuredKiconnectFallbackModel
       : DEFAULT_KICONNECT_FALLBACK_MODEL,
     port: resolveServerPort(process.env),
+    frontendOrigin: process.env.FRONTEND_ORIGIN?.trim() || null,
     aiCacheEnabled: process.env.EVENTA_AI_CACHE_ENABLED !== 'false',
     aiCacheTtlMs: 5 * 60_000,
     aiCacheMaxEntries: 100,

@@ -11,6 +11,7 @@ import { sendAppError, sendJson } from './api/http.js'
 import { handleInterpretEvent } from './api/interpretEvent.js'
 import { handleMatchProducts } from './api/matchProducts.js'
 import { loadServerConfig } from './config/env.js'
+import { corsResponseHeaders } from './cors.js'
 import { AppError } from './errors/appError.js'
 import { logServer, withRequestContext } from './observability/logger.js'
 
@@ -36,10 +37,18 @@ const provider: AIProvider | null = baseProvider
 const server = createServer(async (request, response) => {
   const requestId = request.headers['x-request-id']?.toString().slice(0, 100) || randomUUID()
   response.setHeader('X-Request-Id', requestId)
+  const corsHeaders = corsResponseHeaders(request.headers.origin, config.frontendOrigin)
+  for (const [header, value] of Object.entries(corsHeaders)) response.setHeader(header, value)
   const url = new URL(request.url ?? '/', `http://${request.headers.host ?? 'localhost'}`)
   const started = performance.now()
   let operation = 'not_found'
   await withRequestContext({ requestId, endpoint: url.pathname }, async () => { try {
+    if (request.method === 'OPTIONS') {
+      operation = 'cors_preflight'
+      response.writeHead(204)
+      response.end()
+      return
+    }
     if (request.method === 'GET' && url.pathname === '/api/health') {
       operation = 'health'
       sendJson(response, 200, { status: 'ok', version: process.env.npm_package_version ?? '0.1.0', aiConfigured: provider !== null, aiProvider: provider?.name ?? config.aiProvider })
