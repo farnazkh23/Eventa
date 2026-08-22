@@ -1,4 +1,4 @@
-import type { EventInterpretation } from '../../shared/eventInterpretation.js'
+import type { DietaryRequirement, EventInterpretation } from '../../shared/eventInterpretation.js'
 import {
   eventInterpretationSchema,
   type ValidatedEventInterpretation,
@@ -18,6 +18,24 @@ function uniqueNormalized(values: string[], lowercase: boolean): string[] {
   return [...new Set(normalized)]
 }
 
+function normalizeDietaryRequirements(
+  values: ValidatedEventInterpretation['dietaryRequirements'],
+): DietaryRequirement[] {
+  const normalized = values
+    .map(({ type, guestCount }) => ({
+      type: type.trim().toLocaleLowerCase('en'),
+      guestCount,
+    }))
+    .filter(({ type }) => Boolean(type))
+
+  return [...new Map(
+    normalized.map((requirement) => [
+      `${requirement.type}\u0000${requirement.guestCount ?? 'unknown'}`,
+      requirement,
+    ]),
+  ).values()]
+}
+
 export function normalizeEventInterpretation(
   input: ValidatedEventInterpretation,
 ): EventInterpretation {
@@ -31,7 +49,7 @@ export function normalizeEventInterpretation(
     serviceStyle: normalizeOptionalText(input.serviceStyle),
     budgetPerGuest: input.budgetPerGuest,
     totalBudget: input.totalBudget,
-    dietaryRequirements: uniqueNormalized(input.dietaryRequirements, true),
+    dietaryRequirements: normalizeDietaryRequirements(input.dietaryRequirements),
     additionalNotes: uniqueNormalized(input.additionalNotes, false),
   }
 

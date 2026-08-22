@@ -5,6 +5,7 @@ const descriptions = [
   'Company summer party for 120 people in Bern, buffet, CHF 45 per guest, vegetarian options.',
   'Birthday dinner in Zürich for 35 guests. 4 are vegan and we want a seated dinner.',
   'Planning an event for around 80 people.',
+  'Dinner for 40 guests: 3 are gluten-free, 2 are vegan, and vegetarian options are required.',
 ]
 
 const config = loadServerConfig()

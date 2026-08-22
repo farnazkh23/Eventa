@@ -13,7 +13,11 @@ describe('normalizeEventInterpretation', () => {
       serviceStyle: ' buffet ',
       budgetPerGuest: 45,
       totalBudget: null,
-      dietaryRequirements: [' Vegetarian ', 'vegetarian', 'GLUTEN-FREE'],
+      dietaryRequirements: [
+        { type: ' Vegetarian ', guestCount: null },
+        { type: 'vegetarian', guestCount: null },
+        { type: 'GLUTEN-FREE', guestCount: 3 },
+      ],
       additionalNotes: [' Relaxed atmosphere ', 'Relaxed atmosphere'],
     })
 
@@ -27,7 +31,10 @@ describe('normalizeEventInterpretation', () => {
       serviceStyle: 'buffet',
       budgetPerGuest: 45,
       totalBudget: null,
-      dietaryRequirements: ['vegetarian', 'gluten-free'],
+      dietaryRequirements: [
+        { type: 'vegetarian', guestCount: null },
+        { type: 'gluten-free', guestCount: 3 },
+      ],
       additionalNotes: ['Relaxed atmosphere'],
     })
   })

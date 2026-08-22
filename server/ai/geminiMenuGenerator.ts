@@ -14,8 +14,8 @@ Do not produce recipes, cooking instructions, total quantities, package counts, 
 Keep ingredient names concise, generic, and suitable for later catalogue matching.
 Portion and ingredient amounts must be per-serving recommendations only. Never multiply them by guest count.
 Respect every dietary requirement with a suitable menu item or an all-guest menu choice.
-If a dietary guest count is unknown, do not guess it. Use servingScope "dietary_option" for the option and add a transparent planning assumption that allocation will be confirmed during quantity planning.
-If a dietary count is explicitly supported by the original description or additional notes, it may be acknowledged in planningAssumptions without calculating purchase quantities.
+Read each dietary requirement's guestCount from the confirmed event. If it is null, do not guess it. Use servingScope "dietary_option" for the option and add a transparent planning assumption that allocation will be confirmed during quantity planning.
+If a dietary requirement has a non-null guestCount, use that exact supported count when tailoring the menu and optionally acknowledge it in planningAssumptions, without calculating purchase quantities or any other guest-group allocation.
 Never subtract a dietary guest count from the total guest count. Never state or derive a number of standard meals, portions, dishes, packages, or allocations. For example, if 4 vegan guests are stated among 35 guests, acknowledge only the supported count of 4 vegan guests and defer every allocation to quantity planning.
 Keep the menu materially tailored to the event rather than returning a generic default menu.`
 

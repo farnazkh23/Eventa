@@ -14,10 +14,9 @@ const input: MenuGenerationInput = {
     serviceStyle: 'seated dinner',
     budgetPerGuest: null,
     totalBudget: null,
-    dietaryRequirements: ['vegan'],
-    additionalNotes: ['4 guests are vegan'],
+    dietaryRequirements: [{ type: 'vegan', guestCount: 4 }],
+    additionalNotes: [],
   },
-  originalDescription: 'Birthday dinner for 35 guests. 4 are vegan.',
 }
 
 function menuWithAssumption(assumption: string): EventMenu {
@@ -41,6 +40,21 @@ describe('assertNoDerivedPlanningNumbers', () => {
     expect(() => assertNoDerivedPlanningNumbers(
       input,
       menuWithAssumption('Plan 31 standard mains and 4 vegan mains.'),
+    )).toThrow('derived numeric allocations')
+  })
+
+  it('does not allow a count for a dietary requirement whose count is unknown', () => {
+    const unknownCountInput: MenuGenerationInput = {
+      ...input,
+      event: {
+        ...input.event,
+        dietaryRequirements: [{ type: 'vegan', guestCount: null }],
+      },
+    }
+
+    expect(() => assertNoDerivedPlanningNumbers(
+      unknownCountInput,
+      menuWithAssumption('Plan for 4 vegan guests.'),
     )).toThrow('derived numeric allocations')
   })
 })

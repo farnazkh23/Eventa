@@ -1,6 +1,11 @@
 import { z } from 'zod'
 import type { EventInterpretation, InterpretEventRequest } from '../../shared/eventInterpretation'
 
+const dietaryRequirementSchema = z.object({
+  type: z.string().trim().min(1),
+  guestCount: z.number().int().positive().nullable(),
+})
+
 const responseSchema = z.object({
   eventType: z.string().nullable(),
   guestCount: z.number().int().positive().nullable(),
@@ -11,7 +16,10 @@ const responseSchema = z.object({
   serviceStyle: z.string().nullable(),
   budgetPerGuest: z.number().nonnegative().nullable(),
   totalBudget: z.number().nonnegative().nullable(),
-  dietaryRequirements: z.array(z.string()),
+  dietaryRequirements: z.array(z.preprocess(
+    (value) => typeof value === 'string' ? { type: value, guestCount: null } : value,
+    dietaryRequirementSchema,
+  )),
   additionalNotes: z.array(z.string()),
 })
 

@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { menuCourses } from '../../shared/menu.js'
-import { eventInterpretationSchema } from './eventInterpretation.js'
+import { compatibleEventInterpretationSchema } from './eventInterpretation.js'
 import { toGeminiJsonSchema } from './geminiJsonSchema.js'
 
 const menuCourseSchema = z.enum(menuCourses)
@@ -52,7 +52,7 @@ export const eventMenuSchema = generatedMenuSchema.extend({
 
 export const generateMenuRequestSchema = z
   .object({
-    event: eventInterpretationSchema,
+    event: compatibleEventInterpretationSchema,
     originalDescription: z.string().trim().min(10).max(1000).optional(),
   })
   .strict()

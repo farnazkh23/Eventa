@@ -14,7 +14,10 @@ Use null for every missing scalar field and [] for every missing list field.
 Return currency amounts as numeric CHF values without currency symbols.
 Use a numeric guestCount only when the description states a count. For approximate counts such as "around 80", use 80 and record the approximation in additionalNotes.
 Keep location natural and human-readable.
-Normalize dietaryRequirements to concise lowercase terms such as "vegetarian", "vegan", and "gluten-free".
+Represent each dietary requirement as a separate object with a concise lowercase type such as "vegetarian", "vegan", or "gluten-free".
+Set a dietary requirement's guestCount only when the user explicitly states that count for that specific requirement. Otherwise set it to null. Never infer, estimate, split, or derive dietary counts from the total guest count.
+For example, "4 guests are vegan" becomes {"type":"vegan","guestCount":4}; "vegetarian options required" becomes {"type":"vegetarian","guestCount":null}; and "3 gluten-free and 2 vegan guests" becomes two separate entries with counts 3 and 2.
+Do not place an explicitly stated dietary guest count only in additionalNotes; capture it in the matching dietaryRequirements entry.
 Put relevant requirements that do not fit another field into additionalNotes.
 Do not provide advice, menus, quantities, product recommendations, calculations, or conversational text.`
 

@@ -12,8 +12,8 @@ const event: EventInterpretation = {
   serviceStyle: 'seated dinner',
   budgetPerGuest: null,
   totalBudget: null,
-  dietaryRequirements: ['vegan'],
-  additionalNotes: ['4 guests are vegan'],
+  dietaryRequirements: [{ type: 'vegan', guestCount: 4 }],
+  additionalNotes: [],
 }
 
 const menu = {

@@ -16,7 +16,7 @@ const event = {
   serviceStyle: 'buffet',
   budgetPerGuest: 45,
   totalBudget: null,
-  dietaryRequirements: ['vegetarian'],
+  dietaryRequirements: [{ type: 'vegetarian', guestCount: null }],
   additionalNotes: [],
 }
 
@@ -59,6 +59,16 @@ describe('generateMenuRequestSchema', () => {
       originalDescription: 'Company summer party for 120 people in Bern with a buffet.',
     })
     expect(result.event.guestCount).toBe(120)
+  })
+
+  it('normalizes legacy dietary strings in an existing menu request', () => {
+    const result = generateMenuRequestSchema.parse({
+      event: { ...event, dietaryRequirements: ['vegetarian'] },
+    })
+
+    expect(result.event.dietaryRequirements).toEqual([
+      { type: 'vegetarian', guestCount: null },
+    ])
   })
 
   it.each([

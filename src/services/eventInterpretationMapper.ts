@@ -1,10 +1,16 @@
-import type { EventInterpretation } from '../../shared/eventInterpretation'
+import type { DietaryRequirement, EventInterpretation } from '../../shared/eventInterpretation'
 import type { InterpretationField } from '../domain/planning'
 
 const chfNumber = new Intl.NumberFormat('en-CH', { maximumFractionDigits: 2 })
 
 function displayMoney(value: number | null, suffix: string): string {
   return value === null ? '' : `CHF ${chfNumber.format(value)} ${suffix}`
+}
+
+function displayDietaryRequirement(requirement: DietaryRequirement): string {
+  if (requirement.guestCount === null) return requirement.type
+  const guestLabel = requirement.guestCount === 1 ? 'guest' : 'guests'
+  return `${requirement.type} (${requirement.guestCount} ${guestLabel})`
 }
 
 export function toInterpretationFields(data: EventInterpretation): InterpretationField[] {
@@ -41,7 +47,7 @@ export function toInterpretationFields(data: EventInterpretation): Interpretatio
     {
       id: 'dietaryRequirements',
       label: 'Dietary needs',
-      value: data.dietaryRequirements.join(', '),
+      value: data.dietaryRequirements.map(displayDietaryRequirement).join(', '),
       editable: true,
     },
     {
@@ -71,6 +77,44 @@ function listValues(value: string): string[] {
     .filter(Boolean)
 }
 
+function dietaryValues(value: string): DietaryRequirement[] {
+  return listValues(value).map((item) => {
+    const parentheticalCount = item.match(/^(.+?)\s*\((\d+)\s+guests?\)$/i)
+    if (parentheticalCount) {
+      return {
+        type: parentheticalCount[1].trim().toLocaleLowerCase('en'),
+        guestCount: Number(parentheticalCount[2]),
+      }
+    }
+
+    const guestsFirstCount = item.match(/^(\d+)\s+guests?\s+(?:are\s+)?(.+)$/i)
+    if (guestsFirstCount) {
+      return {
+        type: guestsFirstCount[2].trim().toLocaleLowerCase('en'),
+        guestCount: Number(guestsFirstCount[1]),
+      }
+    }
+
+    const areCount = item.match(/^(\d+)\s+are\s+(.+)$/i)
+    if (areCount) {
+      return {
+        type: areCount[2].trim().toLocaleLowerCase('en'),
+        guestCount: Number(areCount[1]),
+      }
+    }
+
+    const guestsLastCount = item.match(/^(\d+)\s+(.+?)\s+guests?$/i)
+    if (guestsLastCount) {
+      return {
+        type: guestsLastCount[2].trim().toLocaleLowerCase('en'),
+        guestCount: Number(guestsLastCount[1]),
+      }
+    }
+
+    return { type: item.toLocaleLowerCase('en'), guestCount: null }
+  })
+}
+
 export function applyInterpretationFieldEdit(
   event: EventInterpretation,
   field: InterpretationField,
@@ -88,9 +132,10 @@ export function applyInterpretationFieldEdit(
     case 'budgetPerGuest':
     case 'totalBudget':
       return { ...event, [field.id]: optionalNumber(field.value) }
-    case 'dietaryRequirements':
     case 'additionalNotes':
       return { ...event, [field.id]: listValues(field.value) }
+    case 'dietaryRequirements':
+      return { ...event, dietaryRequirements: dietaryValues(field.value) }
   }
 }
 

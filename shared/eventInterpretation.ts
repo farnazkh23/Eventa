@@ -1,3 +1,8 @@
+export interface DietaryRequirement {
+  type: string
+  guestCount: number | null
+}
+
 export interface EventInterpretation {
   eventType: string | null
   guestCount: number | null
@@ -8,7 +13,7 @@ export interface EventInterpretation {
   serviceStyle: string | null
   budgetPerGuest: number | null
   totalBudget: number | null
-  dietaryRequirements: string[]
+  dietaryRequirements: DietaryRequirement[]
   additionalNotes: string[]
 }
 
