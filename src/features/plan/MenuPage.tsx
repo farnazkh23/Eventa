@@ -1,11 +1,11 @@
-import { ArrowLeft, Scale } from 'lucide-react'
+import { Scale } from 'lucide-react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { menuCourses, type MenuCourse } from '../../../shared/menu'
 import { usePlanning } from '../../app/PlanningContext'
-import { BottomNavigation } from '../../components/layout/BottomNavigation'
 import { MobileHeader } from '../../components/layout/MobileHeader'
 import { MobileShell } from '../../components/layout/MobileShell'
 import { Card } from '../../components/ui/Card'
+import { Button } from '../../components/ui/Button'
 import styles from './MenuPage.module.css'
 
 const courseLabels: Record<MenuCourse, string> = {
@@ -35,15 +35,9 @@ export function MenuPage() {
     .filter(({ items }) => items.length > 0)
 
   return (
-    <MobileShell compact contentMode="fixed" bottomNavigation={<BottomNavigation />}>
+    <MobileShell compact contentMode="fixed">
       <div className={styles.page}>
-        <MobileHeader
-          action={
-            <button type="button" className={styles.back} onClick={() => navigate('/plan')} aria-label="Back to plan overview">
-              <ArrowLeft size={25} strokeWidth={1.9} aria-hidden="true" />
-            </button>
-          }
-        />
+        <MobileHeader />
 
         <div className={styles.scrollArea} tabIndex={0} role="region" aria-label="Generated event menu">
           <header className={styles.header}>
@@ -90,6 +84,7 @@ export function MenuPage() {
               </ul>
             </Card>
           )}
+          <Button type="button" fullWidth className={styles.action} onClick={() => navigate('/plan/quantities')}>View quantities</Button>
         </div>
       </div>
     </MobileShell>

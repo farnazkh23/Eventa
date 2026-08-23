@@ -80,7 +80,7 @@ Partial results are intentional:
 - a missing verified price produces an unpriced line and a partial budget;
 - one unresolved line never erases otherwise valid quantities, matches, or totals.
 
-The deployed Vercel frontend connects the planning flow. Its source is maintained separately on `feat/frontend-pages`; this backend branch does not merge that branch.
+This release branch contains the deployed mobile frontend and the complete backend planning pipeline in one repository.
 
 ## Transgourmet catalogue snapshot
 

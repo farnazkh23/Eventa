@@ -14,7 +14,7 @@ KI:connect provides language and menu reasoning. Every authoritative calculation
 
 An organiser's brief must normally be translated across dietary notes, menu decisions, serving counts, ingredient quantities, catalogue products, packs, prices, budgets, and a shopping list. Eventa connects these steps while keeping missing evidence and ambiguous decisions visible.
 
-The backend implements the complete computational pipeline through purchasing. The deployed Vercel experience is maintained on `feat/frontend-pages`; this backend branch deliberately remains unmerged with that frontend work.
+The integrated release branch contains the complete backend computational pipeline and the deployed Vercel frontend source.
 
 ## 3. User journey
 

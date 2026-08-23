@@ -1,10 +1,7 @@
 import { z } from 'zod'
-import type { EventInterpretation, InterpretEventRequest } from '../../shared/eventInterpretation'
-
-const dietaryRequirementSchema = z.object({
-  type: z.string().trim().min(1),
-  guestCount: z.number().int().positive().nullable(),
-})
+import type { InterpretEventRequest } from '../../shared/eventInterpretation'
+import type { PlanningEventInterpretation } from '../domain/planning'
+import { getApiUrl } from './apiUrl'
 
 const responseSchema = z.object({
   eventType: z.string().nullable(),
@@ -16,10 +13,10 @@ const responseSchema = z.object({
   serviceStyle: z.string().nullable(),
   budgetPerGuest: z.number().nonnegative().nullable(),
   totalBudget: z.number().nonnegative().nullable(),
-  dietaryRequirements: z.array(z.preprocess(
-    (value) => typeof value === 'string' ? { type: value, guestCount: null } : value,
-    dietaryRequirementSchema,
-  )),
+  dietaryRequirements: z.array(z.object({
+    type: z.string().min(1),
+    guestCount: z.number().int().nonnegative().nullable(),
+  })),
   additionalNotes: z.array(z.string()),
 })
 
@@ -33,12 +30,12 @@ export class InterpretEventServiceError extends Error {
 export async function interpretEvent(
   description: string,
   fetchImplementation: typeof fetch = fetch,
-): Promise<EventInterpretation> {
+): Promise<PlanningEventInterpretation> {
   const request: InterpretEventRequest = { description }
   let response: Response
 
   try {
-    response = await fetchImplementation('/api/interpret-event', {
+    response = await fetchImplementation(getApiUrl('/api/interpret-event'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(request),

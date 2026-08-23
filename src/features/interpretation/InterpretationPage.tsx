@@ -11,13 +11,13 @@ import {
   WalletCards,
   type LucideIcon,
 } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { Navigate, useNavigate } from 'react-router-dom'
 import { usePlanning } from '../../app/PlanningContext'
+import { canEnterInterpretation } from '../../app/initialRoute'
 import { MobileHeader } from '../../components/layout/MobileHeader'
 import { MobileShell } from '../../components/layout/MobileShell'
 import { AiNote } from '../../components/ui/AiNote'
 import { Button } from '../../components/ui/Button'
-import { ProgressIndicator } from '../../components/ui/ProgressIndicator'
 import type { InterpretationFieldId } from '../../domain/planning'
 import { EditableDetail } from './EditableDetail'
 import { MenuGenerationState } from '../plan/MenuGenerationState'
@@ -48,8 +48,8 @@ export function InterpretationPage() {
 
   async function handleGenerateMenu() {
     try {
-      await generateConfirmedMenu()
-      navigate('/plan')
+      const completed = await generateConfirmedMenu()
+      if (completed) navigate('/plan')
     } catch {
       // PlanningContext exposes the safe menu error rendered below.
     }
@@ -60,10 +60,15 @@ export function InterpretationPage() {
     firstEditButton?.focus()
   }
 
-  if (state.menuStatus === 'loading' || state.menuStatus === 'error') {
+  const generationError = state.menuError
+  const generationActive = state.menuStatus === 'loading'
+
+  if (!canEnterInterpretation(state)) return <Navigate to="/" replace />
+
+  if (generationActive || generationError) {
     return (
       <MenuGenerationState
-        error={state.menuError}
+        error={generationError}
         onRetry={() => void handleGenerateMenu()}
         onBack={resetMenuGeneration}
       />
@@ -74,9 +79,6 @@ export function InterpretationPage() {
     <MobileShell compact contentMode="fixed">
       <div className={styles.page}>
         <MobileHeader />
-        <div className={styles.progress}>
-          <ProgressIndicator current={2} total={6} />
-        </div>
 
         <section className={styles.intro} aria-labelledby="interpretation-title">
           <h1 id="interpretation-title">Here’s what we<br />understood</h1>

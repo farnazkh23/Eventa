@@ -1,46 +1,52 @@
 import { describe, expect, it } from 'vitest'
-import type { EventInterpretation } from '../../shared/eventInterpretation'
-import type { InterpretationField } from '../domain/planning'
-import {
-  applyInterpretationFieldEdit,
-  toInterpretationFields,
-} from './eventInterpretationMapper'
+import type { PlanningEventInterpretation } from '../domain/planning'
+import { applyInterpretationFieldEdit, toInterpretationFields } from './eventInterpretationMapper'
 
-const event: EventInterpretation = {
-  eventType: 'birthday',
-  guestCount: 35,
-  location: 'Zürich',
+const event: PlanningEventInterpretation = {
+  eventType: 'corporate party',
+  guestCount: 120,
+  location: 'Bern',
   date: null,
   time: null,
   mealType: 'dinner',
-  serviceStyle: 'seated',
-  budgetPerGuest: null,
+  serviceStyle: 'buffet',
+  budgetPerGuest: 50,
   totalBudget: null,
   dietaryRequirements: [
-    { type: 'vegan', guestCount: 4 },
-    { type: 'gluten-free', guestCount: null },
+    { type: 'vegetarian', guestCount: null },
+    { type: 'vegan', guestCount: 8 },
+    { type: 'gluten-free', guestCount: 5 },
   ],
   additionalNotes: [],
 }
 
-describe('event interpretation dietary field mapping', () => {
-  it('shows known counts while leaving unknown counts unqualified', () => {
+describe('event interpretation mapper', () => {
+  it('displays dietary counts while keeping null unspecified', () => {
     const field = toInterpretationFields(event).find(({ id }) => id === 'dietaryRequirements')
-
-    expect(field?.value).toBe('vegan (4 guests), gluten-free')
+    expect(field?.value).toBe('vegetarian, vegan (8 guests), gluten-free (5 guests)')
   })
 
-  it('preserves structured counts when a dietary field is edited', () => {
-    const field: InterpretationField = {
+  it('preserves counts when dietary requirements are edited', () => {
+    const updated = applyInterpretationFieldEdit(event, {
       id: 'dietaryRequirements',
       label: 'Dietary needs',
-      value: 'gluten-free (3 guests), 2 vegan guests, vegetarian',
+      value: 'vegetarian, vegan (8 guests), gluten-free (5 guests)',
       editable: true,
-    }
+    })
 
-    expect(applyInterpretationFieldEdit(event, field).dietaryRequirements).toEqual([
-      { type: 'gluten-free', guestCount: 3 },
-      { type: 'vegan', guestCount: 2 },
+    expect(updated.dietaryRequirements).toEqual(event.dietaryRequirements)
+  })
+
+  it('keeps zero distinct from an unspecified count', () => {
+    const updated = applyInterpretationFieldEdit(event, {
+      id: 'dietaryRequirements',
+      label: 'Dietary needs',
+      value: 'vegan (0 guests), vegetarian',
+      editable: true,
+    })
+
+    expect(updated.dietaryRequirements).toEqual([
+      { type: 'vegan', guestCount: 0 },
       { type: 'vegetarian', guestCount: null },
     ])
   })

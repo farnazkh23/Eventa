@@ -1,24 +1,31 @@
 .brand {
   display: inline-flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
 }
 
-.wordmark {
-  color: var(--color-text);
-  font-size: 2.7rem;
-  font-weight: 350;
-  letter-spacing: -0.095em;
-  line-height: 0.82;
+.mark {
+  position: relative;
+  display: block;
+  width: 130px;
+  height: 30px;
+  overflow: hidden;
 }
 
-.wordmark span,
-.endorsement {
-  color: var(--color-brand);
+.mark img {
+  position: absolute;
+  top: -52px;
+  left: -26px;
+  width: 181px;
+  height: auto;
+  max-width: none;
 }
 
-.endorsement {
-  margin-top: 0.38rem;
-  font-size: 0.72rem;
-  font-weight: 520;
+.slogan {
+  margin-top: 0.18rem;
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+  font-weight: 560;
+  letter-spacing: 0.015em;
+  line-height: 1.2;
 }

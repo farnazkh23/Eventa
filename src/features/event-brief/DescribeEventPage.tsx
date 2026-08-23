@@ -6,9 +6,8 @@ import { MobileShell } from '../../components/layout/MobileShell'
 import { AiNote } from '../../components/ui/AiNote'
 import { Button } from '../../components/ui/Button'
 import { Card } from '../../components/ui/Card'
-import { ProgressIndicator } from '../../components/ui/ProgressIndicator'
 import { TextAreaField } from '../../components/ui/TextAreaField'
-import { sampleBrief } from '../../services/mockPlanningService'
+import { demoBrief, sampleBrief } from '../../services/mockPlanningService'
 import styles from './DescribeEventPage.module.css'
 
 export function DescribeEventPage() {
@@ -38,10 +37,7 @@ export function DescribeEventPage() {
 
   return (
     <MobileShell>
-      <MobileHeader />
-      <div className={styles.progress}>
-        <ProgressIndicator current={1} total={6} />
-      </div>
+      <MobileHeader showHistory={false} />
 
       <section className={styles.intro} aria-labelledby="describe-title">
         <h1 id="describe-title">Tell us about<br />your event</h1>
@@ -55,17 +51,30 @@ export function DescribeEventPage() {
           handleContinue()
         }}
       >
-        <TextAreaField
-          id="event-description"
-          label="Describe your event"
-          maxLength={1000}
-          value={state.brief}
-          placeholder={sampleBrief}
-          onChange={(event) => setBrief(event.target.value)}
-          disabled={isLoading}
-          required
-          aria-describedby="event-description-help"
-        />
+        <div className={styles.description}>
+          <TextAreaField
+            id="event-description"
+            label="Describe your event"
+            maxLength={1000}
+            value={state.brief}
+            placeholder={sampleBrief}
+            onChange={(event) => setBrief(event.target.value)}
+            disabled={isLoading}
+            required
+            aria-describedby="event-description-help"
+          />
+          <button
+            type="button"
+            className={styles.example}
+            onClick={() => {
+              setBrief(demoBrief)
+              requestAnimationFrame(focusDescription)
+            }}
+            disabled={isLoading}
+          >
+            Use example
+          </button>
+        </div>
         {hasError ? (
           <Card className={styles.error} role="alert">
             <AlertCircle size={24} strokeWidth={1.9} aria-hidden="true" />
@@ -73,7 +82,13 @@ export function DescribeEventPage() {
           </Card>
         ) : (
           <div id="event-description-help">
-            <AiNote>{isLoading ? 'Eventa is understanding your event.' : 'Eventa will extract the important details for you.'}</AiNote>
+            <AiNote>
+              {isLoading
+                ? 'Eventa is understanding your event.'
+                : state.planInvalidatedByBrief
+                  ? 'Your event description changed. Continue to review the details and regenerate your plan.'
+                  : 'Eventa will extract the important details for you.'}
+            </AiNote>
           </div>
         )}
         <Button

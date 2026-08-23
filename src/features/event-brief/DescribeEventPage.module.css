@@ -1,9 +1,5 @@
-.progress {
-  margin-top: 2.25rem;
-}
-
 .intro {
-  margin: 2.55rem 0 1.5rem;
+  margin: 1rem 0 1.25rem;
 }
 
 .intro h1 {
@@ -23,7 +19,38 @@
 
 .form {
   display: grid;
-  gap: 1.5rem;
+  gap: 1.25rem;
+}
+
+.description {
+  display: grid;
+}
+
+.example {
+  justify-self: end;
+  min-width: 44px;
+  min-height: 44px;
+  margin: 0.25rem 0 -0.45rem;
+  padding: 0.55rem 0.3rem;
+  border: 0;
+  color: var(--color-brand);
+  background: transparent;
+  font-size: 0.88rem;
+  font-weight: 640;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--color-brand) 55%, transparent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.22rem;
+  cursor: pointer;
+}
+
+.example:hover:not(:disabled) {
+  color: var(--color-brand-hover);
+  text-decoration-color: currentColor;
+}
+
+.example:active:not(:disabled) {
+  transform: translateY(1px);
 }
 
 .form > :last-child {

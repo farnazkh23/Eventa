@@ -1,6 +1,7 @@
 import { z } from 'zod'
-import type { EventInterpretation } from '../../shared/eventInterpretation'
-import { menuCourses, type EventMenu, type GenerateMenuRequest } from '../../shared/menu'
+import { menuCourses, type EventMenu } from '../../shared/menu'
+import type { PlanningEventInterpretation } from '../domain/planning'
+import { getApiUrl } from './apiUrl'
 
 const menuSchema = z.object({
   title: z.string().min(1),
@@ -21,7 +22,6 @@ const menuSchema = z.object({
       unit: z.string().min(1).nullable(),
     })),
     servingScope: z.enum(['all_guests', 'dietary_option', 'shared']),
-    dietaryAllocationType: z.string().min(1).nullable().optional(),
   })).min(2),
   planningAssumptions: z.array(z.string()),
 })
@@ -33,29 +33,19 @@ export class GenerateMenuServiceError extends Error {
   }
 }
 
-export function createGenerateMenuRequest(
-  event: EventInterpretation,
+export async function generateMenu(
+  event: PlanningEventInterpretation,
   originalDescription: string,
-): GenerateMenuRequest {
-  const description = originalDescription.trim()
-  return {
-    event,
-    ...(description ? { originalDescription: description } : {}),
-  }
-}
-
-/** Stable browser key; the server SHA-256 hashes this same normalized request body. */
-export function generateMenuRequestKey(request: GenerateMenuRequest): string {
-  return JSON.stringify(request)
-}
-
-export async function generateMenuRequest(
-  request: GenerateMenuRequest,
   fetchImplementation: typeof fetch = fetch,
 ): Promise<EventMenu> {
+  const request: { event: PlanningEventInterpretation; originalDescription?: string } = {
+    event,
+    ...(originalDescription.trim() ? { originalDescription } : {}),
+  }
+
   let response: Response
   try {
-    response = await fetchImplementation('/api/generate-menu', {
+    response = await fetchImplementation(getApiUrl('/api/generate-menu'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(request),
@@ -76,15 +66,4 @@ export async function generateMenuRequest(
   } catch {
     throw new GenerateMenuServiceError('Eventa received an invalid menu. Please try again.')
   }
-}
-
-export function generateMenu(
-  event: EventInterpretation,
-  originalDescription: string,
-  fetchImplementation: typeof fetch = fetch,
-): Promise<EventMenu> {
-  return generateMenuRequest(
-    createGenerateMenuRequest(event, originalDescription),
-    fetchImplementation,
-  )
 }

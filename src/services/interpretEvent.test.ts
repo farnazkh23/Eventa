@@ -11,7 +11,10 @@ const validResult = {
   serviceStyle: 'buffet',
   budgetPerGuest: 45,
   totalBudget: null,
-  dietaryRequirements: [{ type: 'vegetarian', guestCount: null }],
+  dietaryRequirements: [
+    { type: 'vegetarian', guestCount: null },
+    { type: 'vegan', guestCount: 8 },
+  ],
   additionalNotes: [],
 }
 
@@ -28,18 +31,6 @@ describe('interpretEvent', () => {
     expect(fetchMock).toHaveBeenCalledWith('/api/interpret-event', expect.objectContaining({
       method: 'POST',
     }))
-  })
-
-  it('normalizes legacy dietary string responses for backwards compatibility', async () => {
-    const legacyResult = { ...validResult, dietaryRequirements: ['vegetarian'] }
-    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
-      new Response(JSON.stringify(legacyResult), { status: 200 }),
-    )
-
-    await expect(interpretEvent('Company event for 120 people', fetchMock)).resolves.toEqual({
-      ...validResult,
-      dietaryRequirements: [{ type: 'vegetarian', guestCount: null }],
-    })
   })
 
   it('converts server failures into a safe service error', async () => {
@@ -61,6 +52,16 @@ describe('interpretEvent', () => {
     )
 
     await expect(interpretEvent('Birthday dinner for 35 guests', fetchMock)).rejects.toThrow(
+      'Eventa received an invalid response. Please try again.',
+    )
+  })
+
+  it('rejects malformed structured dietary requirements', async () => {
+    const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response(JSON.stringify({ ...validResult, dietaryRequirements: [{ type: 'vegan', guestCount: '8' }] }), { status: 200 }),
+    )
+
+    await expect(interpretEvent('Dinner for vegan guests', fetchMock)).rejects.toThrow(
       'Eventa received an invalid response. Please try again.',
     )
   })

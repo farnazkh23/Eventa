@@ -1,0 +1,41 @@
+.stack { display: grid; gap: .65rem; }
+.section { margin-top: 1.45rem; }
+.section h2 { margin: 0 0 .75rem; font-size: 1rem; font-weight: 700; }
+.action { margin-top: 1.4rem; }
+.stateBlock { display: grid; gap: .75rem; }
+.confirmationCard { margin-top: .8rem; padding: 1rem; }
+.confirmationCard form { display: grid; gap: .75rem; }
+.confirmationCard label { color: var(--color-text); font-size: .95rem; font-weight: 700; line-height: 1.4; }
+.confirmationCard small { color: var(--color-text-muted); font-size: .78rem; }
+.quantityInput { display: flex; align-items: center; gap: .65rem; }
+.quantityInput input { width: min(9rem, 55%); min-height: 48px; padding: .7rem .8rem; border: 1px solid var(--color-border); border-radius: var(--radius-sm); color: var(--color-text); background: var(--color-surface); font: inherit; }
+.quantityInput span { color: var(--color-text-muted); font-size: .9rem; }
+.matchCard { display: grid; gap: .75rem; padding: 1rem; }
+.matchHeading { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: .7rem; }
+.matchHeading > span:last-child { display: grid; min-width: 0; gap: .15rem; }
+.matchHeading strong { overflow-wrap: anywhere; font-size: .94rem; }
+.matchHeading small { color: var(--color-text-muted); font-size: .78rem; }
+.matchIcon { display: grid; width: 42px; height: 42px; place-items: center; border-radius: var(--radius-sm); color: var(--color-brand); background: var(--color-brand-soft); }
+.matchSuccess, .matchAttention { font-size: .82rem; }
+.matchSuccess { color: var(--color-success); }
+.matchAttention { color: var(--color-text); }
+.productFacts { display: grid; gap: .45rem; margin: 0; }
+.productFacts div { display: grid; grid-template-columns: minmax(6.5rem, .75fr) minmax(0, 1.25fr); gap: .65rem; padding-top: .45rem; border-top: 1px solid rgba(104,117,139,.14); }
+.productFacts dt { color: var(--color-text-muted); font-size: .78rem; }
+.productFacts dd { min-width: 0; margin: 0; overflow-wrap: anywhere; font-size: .8rem; font-weight: 650; text-align: right; }
+.matchReason { margin: 0; color: var(--color-text-muted); font-size: .8rem; line-height: 1.45; }
+.summary { display: grid; gap: .85rem; padding: 1.1rem; }
+.summaryRow { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; }
+.summaryRow span { display: inline-flex; align-items: center; gap: .45rem; color: var(--color-text-muted); font-size: .86rem; }
+.summaryRow strong { font-size: .92rem; text-align: right; }
+.pendingValue { color: var(--color-text-muted); font-weight: 550; }
+.detailName { margin: 0 0 1.25rem; font-size: 1.15rem; font-weight: 700; line-height: 1.35; }
+.note { margin: 1rem 0 0; color: var(--color-text-muted); font-size: .8rem; line-height: 1.5; }
+.statusList { display: grid; gap: .6rem; margin-top: 1.25rem; }
+.statusLine { display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-height: 50px; padding: .25rem 0; border-bottom: 1px solid rgba(104,117,139,.14); }
+.statusLine:last-child { border-bottom: 0; }
+.statusLine span { color: var(--color-text-muted); font-size: .86rem; }
+.statusLine strong { font-size: .86rem; }
+.total { padding: 1.2rem; }
+.total span { display: block; color: var(--color-text-muted); font-size: .82rem; }
+.total strong { display: block; margin-top: .25rem; font-size: 1.55rem; letter-spacing: -.025em; }

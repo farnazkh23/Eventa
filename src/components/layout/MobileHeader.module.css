@@ -1,6 +1,19 @@
 .header {
+  position: relative;
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  min-height: 58px;
+  min-height: 97px;
+  flex-direction: column;
+  align-items: center;
 }
+
+.brandOnly {
+  min-height: 49px;
+}
+
+.history { display: flex; justify-content: center; gap: 2rem; margin-top: .5rem; }
+.history button { display: grid; width: 40px; height: 40px; place-items: center; padding: 0; border: 0; color: var(--color-brand); background: transparent; cursor: pointer; }
+.history button:hover:not(:disabled) { color: var(--color-brand-hover); }
+.history button:disabled { color: #c5cad3; background: transparent; opacity: 1; }
+.logo { padding: 0 .35rem; border: 0; color: inherit; background: transparent; cursor: pointer; }
+.logo:hover { opacity: .82; }
+.action { position: absolute; top: 0; right: 0; display: grid; width: 44px; min-height: 44px; place-items: center; }

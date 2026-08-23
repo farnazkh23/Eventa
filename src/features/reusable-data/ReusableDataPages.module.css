@@ -1,0 +1,130 @@
+.formCard,
+.item {
+  padding: 1rem;
+}
+
+.formCard label {
+  display: grid;
+  gap: 0.4rem;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.formCard input {
+  width: 100%;
+  min-height: 48px;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  background: var(--color-surface);
+}
+
+.formCard button {
+  margin-top: 0.85rem;
+}
+
+.section {
+  margin-top: 1.2rem;
+}
+
+.section h2 {
+  margin: 0 0 0.65rem;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.list {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.itemHeader {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.icon {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border-radius: var(--radius-sm);
+  color: var(--color-brand);
+  background: var(--color-brand-soft);
+}
+
+.copy {
+  display: grid;
+  min-width: 0;
+  gap: 0.2rem;
+}
+
+.copy strong {
+  overflow: hidden;
+  font-size: 0.94rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.copy small {
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.itemActions {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.75rem;
+}
+
+.itemActions button,
+.iconButton {
+  min-height: 44px;
+  border: 0;
+  cursor: pointer;
+}
+
+.itemActions button {
+  flex: 1;
+  padding: 0.6rem 0.8rem;
+  border-radius: var(--radius-pill);
+  color: var(--color-text);
+  background: var(--color-surface-soft);
+  font-size: 0.82rem;
+  font-weight: 650;
+}
+
+.itemActions .useAction {
+  color: #fff;
+  background: var(--color-brand);
+}
+
+.iconButton {
+  display: grid;
+  width: 44px;
+  place-items: center;
+  padding: 0;
+  color: var(--color-text-muted);
+  background: transparent;
+}
+
+.message {
+  margin: 0.75rem 0 0;
+  color: var(--color-success);
+  font-size: 0.82rem;
+}
+
+.error {
+  margin: 0.75rem 0 0;
+  color: #8d1831;
+  font-size: 0.82rem;
+}
+
+.offerState {
+  margin-top: 1.2rem;
+}

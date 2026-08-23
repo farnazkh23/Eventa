@@ -1,0 +1,53 @@
+.intro {
+  position: fixed;
+  z-index: 50;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: var(--color-page);
+  opacity: 1;
+  transition: opacity 180ms cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.exiting {
+  pointer-events: none;
+  opacity: 0;
+}
+
+.frame {
+  width: 100%;
+  max-width: var(--content-width);
+  height: 100%;
+  overflow: hidden;
+  background: rgba(249, 250, 253, 0.8);
+}
+
+.video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+}
+
+@media (min-width: 540px) {
+  .intro {
+    padding: 3.5rem 1rem;
+  }
+
+  .frame {
+    height: min(920px, 100%);
+    border: 1px solid rgba(255, 255, 255, 0.9);
+    border-radius: 3.5rem;
+    box-shadow: var(--shadow-shell);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .intro {
+    display: none;
+    transition: none;
+  }
+}

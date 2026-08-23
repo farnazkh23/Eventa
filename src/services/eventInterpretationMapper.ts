@@ -1,5 +1,4 @@
-import type { DietaryRequirement, EventInterpretation } from '../../shared/eventInterpretation'
-import type { InterpretationField } from '../domain/planning'
+import type { DietaryRequirement, InterpretationField, PlanningEventInterpretation } from '../domain/planning'
 
 const chfNumber = new Intl.NumberFormat('en-CH', { maximumFractionDigits: 2 })
 
@@ -13,7 +12,7 @@ function displayDietaryRequirement(requirement: DietaryRequirement): string {
   return `${requirement.type} (${requirement.guestCount} ${guestLabel})`
 }
 
-export function toInterpretationFields(data: EventInterpretation): InterpretationField[] {
+export function toInterpretationFields(data: PlanningEventInterpretation): InterpretationField[] {
   return [
     { id: 'eventType', label: 'Event type', value: data.eventType ?? '', editable: true },
     {
@@ -79,46 +78,20 @@ function listValues(value: string): string[] {
 
 function dietaryValues(value: string): DietaryRequirement[] {
   return listValues(value).map((item) => {
-    const parentheticalCount = item.match(/^(.+?)\s*\((\d+)\s+guests?\)$/i)
-    if (parentheticalCount) {
-      return {
-        type: parentheticalCount[1].trim().toLocaleLowerCase('en'),
-        guestCount: Number(parentheticalCount[2]),
-      }
+    const match = item.match(/^(.*?)(?:\s*\((\d+)\s+guests?\))?$/i)
+    const type = match?.[1]?.trim() || item
+    const countText = match?.[2]
+    return {
+      type,
+      guestCount: countText === undefined ? null : Number(countText),
     }
-
-    const guestsFirstCount = item.match(/^(\d+)\s+guests?\s+(?:are\s+)?(.+)$/i)
-    if (guestsFirstCount) {
-      return {
-        type: guestsFirstCount[2].trim().toLocaleLowerCase('en'),
-        guestCount: Number(guestsFirstCount[1]),
-      }
-    }
-
-    const areCount = item.match(/^(\d+)\s+are\s+(.+)$/i)
-    if (areCount) {
-      return {
-        type: areCount[2].trim().toLocaleLowerCase('en'),
-        guestCount: Number(areCount[1]),
-      }
-    }
-
-    const guestsLastCount = item.match(/^(\d+)\s+(.+?)\s+guests?$/i)
-    if (guestsLastCount) {
-      return {
-        type: guestsLastCount[2].trim().toLocaleLowerCase('en'),
-        guestCount: Number(guestsLastCount[1]),
-      }
-    }
-
-    return { type: item.toLocaleLowerCase('en'), guestCount: null }
   })
 }
 
 export function applyInterpretationFieldEdit(
-  event: EventInterpretation,
+  event: PlanningEventInterpretation,
   field: InterpretationField,
-): EventInterpretation {
+): PlanningEventInterpretation {
   switch (field.id) {
     case 'eventType':
     case 'location':
@@ -132,14 +105,14 @@ export function applyInterpretationFieldEdit(
     case 'budgetPerGuest':
     case 'totalBudget':
       return { ...event, [field.id]: optionalNumber(field.value) }
-    case 'additionalNotes':
-      return { ...event, [field.id]: listValues(field.value) }
     case 'dietaryRequirements':
       return { ...event, dietaryRequirements: dietaryValues(field.value) }
+    case 'additionalNotes':
+      return { ...event, [field.id]: listValues(field.value) }
   }
 }
 
-export const emptyEventInterpretation: EventInterpretation = {
+export const emptyEventInterpretation: PlanningEventInterpretation = {
   eventType: null,
   guestCount: null,
   location: null,

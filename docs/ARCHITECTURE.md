@@ -26,7 +26,7 @@ flowchart TD
   PURCHASE --> RESULT[Packs, purchased quantity, surplus,<br/>partial/complete budget, shopping list]
 ```
 
-The deployed frontend is maintained on `feat/frontend-pages`. This backend branch deliberately does not merge it, but exposes every API it consumes.
+The integrated release branch contains both the deployed frontend source and every backend API it consumes.
 
 ## Request sequence
 
@@ -169,7 +169,7 @@ See [API.md](API.md) for field-level contracts.
 | Quantities and serving overrides | Implemented deterministically |
 | Product matching and alternatives | Implemented deterministically |
 | Packs, purchasing, partial budget, shopping list | Implemented deterministically |
-| Deployed frontend pipeline | Implemented on `feat/frontend-pages` / Vercel |
+| Deployed frontend pipeline | Implemented in this release branch / Vercel |
 | Live official catalogue, prices, or stock | Not implemented |
 | Authentication and persistent plans | Not implemented |
 | Checkout or order submission | Not implemented |
