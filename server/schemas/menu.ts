@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { menuCourses } from '../../shared/menu.js'
 import { compatibleEventInterpretationSchema } from './eventInterpretation.js'
-import { toGeminiJsonSchema } from './geminiJsonSchema.js'
+import { toStructuredOutputJsonSchema } from './structuredOutputJsonSchema.js'
 
 export const menuIngredientUnits = ['g', 'kg', 'ml', 'l', 'piece'] as const
 const generatedMenuCourses = menuCourses.filter((course) =>
@@ -64,7 +64,7 @@ export const generateMenuRequestSchema = z
 
 export type GeneratedMenu = z.infer<typeof generatedMenuSchema>
 
-export const generatedMenuJsonSchema = toGeminiJsonSchema({
+export const generatedMenuJsonSchema = toStructuredOutputJsonSchema({
   type: 'object',
   properties: {
     title: { type: 'string' },

@@ -1,34 +1,47 @@
 # Eventa project guidance
 
-Eventa is a mobile-first, AI-assisted event and catering planner for Transgourmet.
+Eventa is a mobile-first, AI-assisted event and catering planner built as a Transgourmet / Prodega hackathon prototype.
 
-## Source of truth
+## Sources of truth
 
-- Before UI work, inspect every image in `docs/design-reference/` at full resolution.
-- Treat those references as authoritative for visual hierarchy, spacing, surfaces, controls, and flow. Do not introduce a competing design system.
-- Preserve the lowercase `eventa.` wordmark with the small `by Transgourmet` endorsement.
+- Treat implemented routes, handlers, Zod schemas, shared contracts, and imported domain services as the authority for capability claims.
+- Treat `data/transgourmet-products.canonical.csv` as the matcher’s catalogue snapshot. Preserve its article-number identity and provenance/conflict metadata.
+- Before UI work, inspect every image in `docs/design-reference/` at full resolution. Preserve the lowercase `eventa.` brand, Transgourmet-inspired red accent, neutral surfaces, mobile proportions, and one-main-action-per-screen flow.
+- Do not claim that a backend stage is connected merely because the UI contains a card or pending label for it.
 
-## Product and design rules
+## Architecture rules
 
-- Design mobile-first; enhance wider screens without turning the experience into a desktop dashboard.
-- Keep screens minimal and quickly scannable, with one dominant decision or action per screen.
-- Use a mostly white/neutral palette, dark blue-gray text, cool gray secondary text, and Transgourmet-inspired red as the primary accent. Reserve semantic colors for status.
-- Follow the references: generous whitespace, large rounded containers, subtle borders/shadows, thin outline icons, clear progress, and prominent full-width primary actions.
-- Prefer text, icons, quantities, and summaries. Avoid image-heavy food catalogues; use real food/product photography only when it adds decision value.
-- Build reusable primitives and shared design tokens; avoid page-specific styling drift.
-- Keep copy plain, concise, and sentence case. Make loading, empty, validation, error, and success states intentional.
-- Meet WCAG AA basics: semantic HTML, keyboard access, visible focus, adequate contrast, touch targets of at least 44px, and reduced-motion support.
-- QR visitors must be able to complete the prototype flow without authentication. Login may only be optional and outside the critical path.
+- Preserve the probabilistic/deterministic boundary: **AI reasons; Eventa calculates.**
+- KI:connect is Eventa's AI provider. Mistral Small 4 (`mistralai-mistral-small-4-119b`) is primary and GPT OSS (`gpt-oss-120b`) is the supported fallback.
+- Never ask an LLM to perform authoritative serving, quantity, unit, product, pack, surplus, pricing, budget, or shopping-list arithmetic.
+- Keep dietary serving allocation, quantity calculation, unit conversion, ingredient normalization, product matching, purchasing, and budgeting deterministic and testable in TypeScript.
+- Treat AI and external data as untrusted. Validate with Zod/runtime schemas and normalize before domain use.
+- Never fabricate catalogue products, article numbers, prices, price bases, pack sizes, provenance, official API access, or completion status. Missing facts remain null/unavailable or unresolved.
+- Prefer officially verified canonical products, but retain low-confidence/unresolved states and alternatives when evidence is insufficient.
+- Preserve source, verification, seed/scraped/merged provenance, and conflict flags when changing catalogue tooling.
+- Keep partial results useful: one unknown dietary allocation, ingredient, match, pack, or price must not erase valid deterministic results elsewhere.
 
-## Engineering rules
+## Security and deployment
 
-- Use React and TypeScript with strict type checking and a lightweight feature-based architecture.
-- Keep state local by default. Add dependencies or global state only when a demonstrated need outweighs the complexity.
-- Separate domain data and AI/service adapters from presentation components. Mock external services behind typed interfaces for the prototype.
-- Test the critical guest flow and core calculation/domain logic. Run formatting, linting, type checks, and relevant tests before handoff.
-- Never commit secrets or personal data. Use environment variables and provide safe example configuration.
+- Keep `KICONNECT_API_KEY` and all provider credentials server-side. Never expose secrets through `VITE_*`, client code, logs, responses, or committed files. `VITE_API_BASE_URL` is a public URL, not a credential.
+- `.env.local` and secret environment files must remain ignored; `.env.example` contains placeholders only.
+- Keep request validation, body limits, safe typed errors, request IDs, and narrow configured CORS behavior intact.
+- Do not add authentication, persistence, a live catalogue claim, or order submission unless those capabilities are explicitly implemented and authorized.
 
-## Working agreement
+## Frontend direction
 
-- Keep hackathon changes small, reviewable, and directly tied to the current phase.
-- Do not add application code or major dependencies until the proposed stack and implementation phase are approved.
+- Design mobile-first and retain the current visual system rather than introducing a competing one.
+- Keep screens minimal, scannable, keyboard accessible, and responsive, with stable viewport behavior and touch-sized controls.
+- Prefer reusable tokens and components. Avoid image-heavy catalogue layouts and unnecessary food photography.
+- The QR path must remain usable without login.
+- Pending/unconnected stages must be labelled honestly and must never display mock totals as real backend output.
+
+## Engineering workflow
+
+- Keep hackathon architecture lightweight; avoid unnecessary frameworks, dependencies, services, or speculative abstractions.
+- Prefer pure domain functions and focused tests for deterministic logic.
+- Reuse shared contracts and existing HTTP/provider utilities instead of creating parallel versions.
+- Preserve user work and unrelated changes. Do not use destructive Git commands without explicit authorization.
+- Update `README.md` and relevant files under `docs/` whenever provider defaults, endpoints, datasets, frontend connections, or capability status changes.
+- Before handoff, run `npm run lint`, `npm run typecheck`, `npm test`, and `npm run build`, plus relevant deterministic verification scripts.
+- Clearly distinguish live AI scripts from quota-free deterministic verification.

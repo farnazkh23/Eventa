@@ -6,13 +6,13 @@ const unsupportedSchemaKeys = new Set([
   'maxLength',
 ])
 
-export function toGeminiJsonSchema(value: unknown): unknown {
-  if (Array.isArray(value)) return value.map(toGeminiJsonSchema)
+export function toStructuredOutputJsonSchema(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(toStructuredOutputJsonSchema)
   if (!value || typeof value !== 'object') return value
 
   return Object.fromEntries(
     Object.entries(value)
       .filter(([key]) => !unsupportedSchemaKeys.has(key))
-      .map(([key, child]) => [key, toGeminiJsonSchema(child)]),
+      .map(([key, child]) => [key, toStructuredOutputJsonSchema(child)]),
   )
 }

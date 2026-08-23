@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { toGeminiJsonSchema } from './geminiJsonSchema.js'
+import { toStructuredOutputJsonSchema } from './structuredOutputJsonSchema.js'
 
 const nullableText = z.string().trim().min(1).max(300).nullable()
 const nullableMoney = z.number().finite().nonnegative().max(10_000_000).nullable()
@@ -54,6 +54,6 @@ export const compatibleEventInterpretationSchema = eventInterpretationSchema.ext
 
 export type ValidatedEventInterpretation = z.infer<typeof eventInterpretationSchema>
 
-export const eventInterpretationJsonSchema = toGeminiJsonSchema(
+export const eventInterpretationJsonSchema = toStructuredOutputJsonSchema(
   z.toJSONSchema(eventInterpretationSchema, { target: 'draft-7' }),
 )

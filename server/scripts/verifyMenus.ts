@@ -1,5 +1,5 @@
 import type { GenerateMenuRequest } from '../../shared/menu.js'
-import { GeminiMenuGenerator } from '../ai/geminiMenuGenerator.js'
+import { createKiconnectProvider } from '../ai/createKiconnectProvider.js'
 import { loadServerConfig } from '../config/env.js'
 
 interface VerificationScenario {
@@ -71,9 +71,8 @@ const scenarios: VerificationScenario[] = [
 ]
 
 const config = loadServerConfig()
-if (!config.geminiApiKey) throw new Error('GEMINI_API_KEY is not configured in .env.local')
-
-const generator = new GeminiMenuGenerator(config.geminiApiKey, config.geminiModel)
+const provider = createKiconnectProvider(config)
+if (!provider) throw new Error('KICONNECT_API_KEY is not configured in .env.local')
 const selectedLabel = process.argv[2]?.toUpperCase()
 const selectedScenarios = selectedLabel
   ? scenarios.filter(({ label }) => label === selectedLabel)
@@ -83,7 +82,7 @@ if (selectedScenarios.length === 0) throw new Error('Choose menu scenario A, B, 
 
 for (const [index, scenario] of selectedScenarios.entries()) {
   if (index > 0) await new Promise((resolve) => setTimeout(resolve, 16_000))
-  const menu = await generator.generate(scenario.request)
+  const menu = await provider.generate(scenario.request)
   console.info(`Scenario ${scenario.label}: ${scenario.request.originalDescription}`)
   console.info(JSON.stringify(menu, null, 2))
 }

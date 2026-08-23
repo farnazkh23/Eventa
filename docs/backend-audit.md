@@ -1,5 +1,17 @@
 # Eventa backend audit
 
+> **Historical engineering snapshot — 22 August 2026.** Gemini was evaluated earlier in development and was later replaced by KI:connect for the final Eventa prototype. The provider, implementation-status, and deployment statements below describe that earlier investigation and are not current architecture. See [README.md](../README.md), [ARCHITECTURE.md](ARCHITECTURE.md), and [TECHNICAL_REPORT.md](TECHNICAL_REPORT.md) for current repository truth.
+
+## What changed after this audit
+
+- A 392-product canonical Transgourmet hackathon dataset was added with provenance, verification, price provenance, and conflict metadata.
+- Deterministic product normalization, ranking, confidence states, alternatives, and conflict down-ranking were implemented behind `POST /api/match-products`.
+- A deterministic purchasing engine and `POST /api/create-purchasing-plan` were added for pack recommendations, purchased quantity, surplus, partial budgets, already-in-stock overrides, and grouped shopping lines.
+- Railway `PORT`/`0.0.0.0` networking and narrow `FRONTEND_ORIGIN` CORS support replaced the deployment limitations recorded below.
+- KI:connect replaced the evaluated Gemini adapter. Mistral Small 4 is the production primary and GPT OSS 120B is the supported fallback.
+
+The original Gemini HTTP 429 investigation remains useful evidence of an external quota/rate-limit limitation and is intentionally preserved.
+
 ## 1. Current architecture
 
 Eventa is a small React/TypeScript application with a Node `http` API. Shared contracts describe interpretations, menus, and quantity plans. Zod validates requests and Gemini structured output. Gemini interprets briefs and proposes per-serving menus; deterministic code performs allocation, conversion, aggregation, and confirmation handling.

@@ -1,9 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { createServer } from 'node:http'
 import { CachedDeduplicatingAIProvider, type AIProvider } from './ai/aiProvider.js'
-import { GeminiProvider } from './ai/geminiProvider.js'
-import { KiconnectProvider } from './ai/kiconnectProvider.js'
-import { KiconnectFailoverProvider } from './ai/kiconnectFailoverProvider.js'
+import { createKiconnectProvider } from './ai/createKiconnectProvider.js'
 import { handleCalculateQuantities } from './api/calculateQuantities.js'
 import { handleCreatePurchasingPlan } from './api/createPurchasingPlan.js'
 import { handleGenerateMenu } from './api/generateMenu.js'
@@ -16,16 +14,7 @@ import { AppError } from './errors/appError.js'
 import { logServer, withRequestContext } from './observability/logger.js'
 
 const config = loadServerConfig()
-const baseProvider: AIProvider | null = config.aiProvider === 'kiconnect'
-  ? config.kiconnectApiKey ? new KiconnectFailoverProvider(
-      new KiconnectProvider(config.kiconnectApiKey, config.kiconnectBaseUrl, config.kiconnectModel),
-      new KiconnectProvider(config.kiconnectApiKey, config.kiconnectBaseUrl, config.kiconnectFallbackModel, {
-        allowPartialQuantityDataAfterCorrection: true,
-      }),
-      config.kiconnectModel,
-      config.kiconnectFallbackModel,
-    ) : null
-  : config.geminiApiKey ? new GeminiProvider(config.geminiApiKey, config.geminiModel) : null
+const baseProvider: AIProvider | null = createKiconnectProvider(config)
 const provider: AIProvider | null = baseProvider
   ? new CachedDeduplicatingAIProvider(baseProvider, {
       enabled: config.aiCacheEnabled,
@@ -51,7 +40,7 @@ const server = createServer(async (request, response) => {
     }
     if (request.method === 'GET' && url.pathname === '/api/health') {
       operation = 'health'
-      sendJson(response, 200, { status: 'ok', version: process.env.npm_package_version ?? '0.1.0', aiConfigured: provider !== null, aiProvider: provider?.name ?? config.aiProvider })
+      sendJson(response, 200, { status: 'ok', version: process.env.npm_package_version ?? '0.1.0', aiConfigured: provider !== null, aiProvider: 'kiconnect' })
       return
     }
     if (request.method === 'POST' && url.pathname === '/api/interpret-event') {
@@ -83,7 +72,7 @@ const server = createServer(async (request, response) => {
 server.requestTimeout = 300_000
 server.timeout = 300_000
 server.listen(config.port, '0.0.0.0', () => {
-  logServer('info', { operation: 'server_started', status: 200, host: '0.0.0.0', port: config.port, aiConfigured: provider !== null, aiProvider: provider?.name ?? config.aiProvider })
+  logServer('info', { operation: 'server_started', status: 200, host: '0.0.0.0', port: config.port, aiConfigured: provider !== null, aiProvider: 'kiconnect' })
 })
 
 function shutdown() { server.close(() => process.exit(0)) }

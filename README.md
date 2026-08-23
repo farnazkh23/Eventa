@@ -1,102 +1,111 @@
 # eventa.
 
-Mobile-first, AI-assisted event and catering planning that turns a natural-language brief into a structured, explainable plan.
+## Event in a Box
 
-*Hackathon prototype for the Transgourmet / Prodega challenge.*
+Eventa turns an unstructured catering brief into a structured event plan, a professional menu, ingredient quantities, matched Transgourmet products, a purchasing budget, and a grouped shopping list.
 
-## The problem
+Built for **BÄRNHÄCKT 2026 / the Transgourmet challenge**. Eventa is a hackathon prototype, not an official production Transgourmet product.
 
-Professional event and catering planning requires translating a brief into a menu, dietary requirements, quantities, purchasable products, a budget, and a shopping list. Today, those steps are often fragmented across conversations, spreadsheets, manual calculations, and catalogue searches.
+- **Live demo:** [eventa-five.vercel.app](https://eventa-five.vercel.app)
+- **Backend health:** [Railway Eventa API](https://eventa-production-3df2.up.railway.app/api/health)
 
-## The solution
+## Why Eventa
 
-eventa. creates a guided planning pipeline:
+Catering planning is fragmented across conversations, menus, dietary notes, spreadsheets, catalogue searches, pack calculations, and budget checks. Eventa connects those steps in one inspectable pipeline:
 
-**Natural-language event brief → AI interpretation → catering menu → deterministic quantities → Transgourmet product matching → pack quantities → budget → shopping list**
-
-The current prototype implements event interpretation, editable structured event details, validated menu generation, and a deterministic quantity API. Product matching, package calculations, budget totals, and shopping-list generation are the next integration stage; the UI labels these steps as pending rather than displaying fabricated values.
-
-## Demo flow
-
-```mermaid
-flowchart LR
-  A[Event description] --> B[Structured interpretation]
-  B --> C[Menu generation]
-  C --> D[Quantity engine]
-  D -. next integration .-> E[Product matching]
-  E -.-> F[Budget]
-  F -.-> G[Shopping list]
+```text
+Free-text event request
+→ KI:connect event interpretation
+→ AI menu generation
+→ deterministic quantities
+→ deterministic Transgourmet product matching
+→ deterministic pack and purchasing calculation
+→ partial or complete budget
+→ grouped shopping list
 ```
 
-## Key technical idea
+The technical principle is deliberately strict:
 
-eventa. deliberately separates probabilistic AI work from deterministic domain logic.
+> **AI reasons. Eventa calculates. Transgourmet data provides product facts.**
 
-| AI / probabilistic | Deterministic |
-|---|---|
-| Understand natural language | Allocate known dietary servings |
-| Propose an appropriate catering menu | Calculate ingredient quantities |
-| Recommend per-serving portions | Normalize units |
-| | Future pack and price calculations |
-
-AI is useful for interpretation and planning, but it is not trusted with arithmetic. This boundary makes results more reliable, transparent, explainable, and straightforward to test.
+AI handles language and menu planning. Deterministic TypeScript owns dietary serving allocation, unit conversion, ingredient totals, product ranking, pack counts, purchased quantity, surplus, pricing arithmetic, budgets, and shopping-list construction.
 
 ## Architecture
 
 ```mermaid
-flowchart TD
-  UI[Mobile React frontend] --> API[Eventa TypeScript API]
-  API --> P[AI provider layer]
-  P --> G[Gemini structured output]
-  G --> Z[Zod validation]
-  Z --> D[Eventa domain model]
-  D --> Q[Deterministic quantity engine]
-  Q -. next integration .-> T[Transgourmet catalogue adapter]
-  T -.-> O[Products, budget, shopping list]
+flowchart LR
+  QR[Audience / QR] --> WEB[Vercel mobile frontend]
+  WEB --> API[Railway Eventa API]
+  API --> AI[KI:connect / RWTH]
+  AI --> M[Mistral Small 4<br/>primary]
+  M -. supported fallback .-> G[GPT OSS 120B]
+  M --> V[Structured output<br/>Zod validation and normalization]
+  G --> V
+  V --> D[Confirmed event and menu]
+  D --> Q[Deterministic quantities]
+  Q --> P[Deterministic product matcher]
+  C[(Canonical Transgourmet snapshot)] --> P
+  P --> B[Deterministic purchasing engine]
+  B --> O[Packs, purchased quantity,<br/>surplus, partial budget,<br/>shopping list]
 ```
 
-## Current capabilities
+The backend exposes each stage independently rather than hiding the planning process behind one opaque call.
 
-- ✅ Natural-language event interpretation
-- ✅ Explicit dietary guest counts, including an honest “unknown” state
-- ✅ Editable interpretation before menu generation
-- ✅ AI-generated, structured catering menus
-- ✅ Stable Eventa-generated menu item IDs
-- ✅ Deterministic serving and ingredient quantity calculation API
-- ✅ Unit normalization to grams, millilitres, and pieces
-- ✅ Partial quantity plans when information is missing or ambiguous
-- ✅ Mobile-first event brief, interpretation, plan overview, and menu routes
-- ◻️ Quantity results are not yet connected to the frontend
-- ◻️ Transgourmet product matching, packs, budget, and shopping list are pending
+## AI provider
 
-## Reliability / engineering
+Eventa has one production provider family: **KI:connect (RWTH / KI:connect NRW)** through its OpenAI-compatible Chat Completions API.
 
-- Gemini API key remains server-side.
-- Gemini JSON schemas guide structured output; strict Zod schemas validate requests and responses.
-- Transport retries handle 429, 503, timeout, and transient network failures with bounded attempts, backoff, jitter, and `Retry-After` support.
-- Schema/policy corrective regeneration is separate from network retry.
-- Identical in-flight AI requests are deduplicated; successful results use a short-lived bounded in-memory cache.
-- Request IDs, safe typed errors, structured logs, and operation timings support traceability.
-- Quantity ambiguity is explicit: unknown or overlapping dietary groups produce partial results requiring confirmation.
-- Strict TypeScript and Vitest cover schemas, normalization, AI resilience, and deterministic calculations.
+- Primary model: `mistralai-mistral-small-4-119b`
+- Fallback model: `gpt-oss-120b`
 
-## UI concept
+Mistral Small 4 was selected because it benchmarked substantially faster for Eventa's structured interpretation and menu workload while satisfying both schemas and menu policy. GPT OSS is retained for supported transient transport failures and schema/policy failures that remain after corrective regeneration. Permanent authentication and request errors are not masked by fallback.
 
-<p align="center">
-  <img src="docs/design-reference/01-describe-event.png" alt="eventa. event description concept" width="30%" />
-  <img src="docs/design-reference/02-ai-interpretation.png" alt="eventa. structured interpretation concept" width="30%" />
-  <img src="docs/design-reference/03-plan-overview.png" alt="eventa. plan overview concept" width="30%" />
-</p>
+AI output is untrusted until strict Zod parsing, normalization, stable-ID generation, and Eventa menu-policy validation complete.
 
-These are design references. The implemented prototype honestly marks unconnected planning stages as pending.
+## Implemented backend capabilities
+
+| Method | Endpoint | Responsibility |
+|---|---|---|
+| `GET` | `/api/health` | Liveness and safe KI:connect configuration status |
+| `POST` | `/api/interpret-event` | Brief → validated event facts |
+| `POST` | `/api/generate-menu` | Confirmed event → validated catering menu |
+| `POST` | `/api/calculate-quantities` | Deterministic allocations and ingredient requirements |
+| `POST` | `/api/match-products` | Deterministic canonical-product ranking and selection |
+| `POST` | `/api/create-purchasing-plan` | Deterministic packs, purchasing, partial budget, and shopping list |
+
+Partial results are intentional:
+
+- unknown or overlapping dietary allocations become `needs_confirmation`;
+- an unresolved product remains unresolved rather than receiving an invented match;
+- a missing verified price produces an unpriced line and a partial budget;
+- one unresolved line never erases otherwise valid quantities, matches, or totals.
+
+The deployed Vercel frontend connects the planning flow. Its source is maintained separately on `feat/frontend-pages`; this backend branch does not merge that branch.
+
+## Transgourmet catalogue snapshot
+
+The canonical hackathon dataset contains **392 unique article numbers** assembled from a manually supplied seed and official, publicly accessible Transgourmet Switzerland documents and product/catalogue pages.
+
+- 261 `verified_public_source`
+- 22 officially identified products with price still unverified
+- 283 products with official public identity evidence across those two statuses
+- 3 partial public-source records
+- 106 seed-unverified records
+- 172 populated prices: 60 from public-source evidence and 112 retained from seed provenance
+- 2 unresolved pack/sales-unit conflicts
+
+Eventa did not authenticate to, bypass, or scrape a protected webshop. Provenance is preserved and missing product facts or prices remain missing. This is a time-bounded hackathon snapshot, not a live complete catalogue or stock feed.
 
 ## Tech stack
 
-**Frontend:** React 19, TypeScript, Vite, React Router, CSS Modules, Lucide icons  
-**Backend:** Node.js, TypeScript, `@google/genai`, Zod  
-**Testing:** Vitest, ESLint, strict TypeScript checks
+- React 19, TypeScript, Vite, React Router, CSS Modules
+- Node.js TypeScript HTTP API
+- KI:connect OpenAI-compatible Chat Completions
+- Zod runtime validation
+- Vitest, ESLint, strict TypeScript
+- Vercel frontend and Railway backend
 
-## Running locally
+## Local development
 
 ```powershell
 npm install
@@ -104,49 +113,91 @@ Copy-Item .env.example .env.local
 npm run dev
 ```
 
-Add your own Gemini key to `.env.local`, then open the Vite URL printed in the terminal—normally `http://localhost:5173`. Vite proxies `/api` to the local API on port `8787`.
-
-## Environment
+Configure `.env.local` with your own server-side KI:connect credential:
 
 ```dotenv
-GEMINI_API_KEY=your_gemini_api_key
-GEMINI_MODEL=gemini-3.7-flash
-EVENTA_AI_CACHE_ENABLED=true
+KICONNECT_API_KEY=your_kiconnect_api_key
+KICONNECT_BASE_URL=https://chat.kiconnect.nrw/api/v1
+KICONNECT_MODEL=mistralai-mistral-small-4-119b
+KICONNECT_FALLBACK_MODEL=gpt-oss-120b
 ```
 
-`GEMINI_MODEL` is optional and the in-memory demo cache can be disabled with `EVENTA_AI_CACHE_ENABLED=false`.
+Local defaults are `http://localhost:5173` for Vite and port `8787` for the API. Vite proxies relative `/api` requests locally.
+
+## Production configuration
+
+Vercel frontend:
+
+```dotenv
+VITE_API_BASE_URL=https://eventa-production-3df2.up.railway.app
+```
+
+Railway backend:
+
+```dotenv
+KICONNECT_API_KEY=your_kiconnect_api_key
+KICONNECT_BASE_URL=https://chat.kiconnect.nrw/api/v1
+KICONNECT_MODEL=mistralai-mistral-small-4-119b
+KICONNECT_FALLBACK_MODEL=gpt-oss-120b
+FRONTEND_ORIGIN=https://eventa-five.vercel.app
+```
+
+Railway supplies `PORT`; Eventa falls back to `EVENTA_API_PORT`, then `8787`, and binds to `0.0.0.0`.
+
+## Security
+
+- `KICONNECT_API_KEY` is server-side only. Never expose it through a `VITE_*` variable.
+- `.env`, `.env.local`, and `.env.*` are ignored; only the placeholder `.env.example` is tracked.
+- Requests and provider output are runtime-validated.
+- Public errors omit provider payloads, stack traces, and secrets.
+- Request-scoped logs contain correlation and timing metadata, not prompts or credentials.
+- Production CORS reflects only the configured frontend origin; it never uses `*`.
 
 ## Repository structure
 
 ```text
-src/                    React application, features, services, and UI components
+src/                    React application
 server/api/             HTTP route handlers
-server/ai/              AI provider boundary, Gemini adapter, and resilience
-server/schemas/         Zod request and structured-output schemas
-server/quantities/      Deterministic allocation and unit conversion
-shared/                 Frontend/backend TypeScript domain contracts
-docs/design-reference/  Authoritative UI concept references
+server/ai/              KI:connect provider, fallback, retry, cache boundary
+server/quantities/      Deterministic allocation and quantity engine
+server/products/        Canonical catalogue loader and matcher
+server/purchasing/      Pack, budget, and shopping-list engine
+server/schemas/         Zod trust-boundary schemas
+shared/                 Cross-layer TypeScript contracts
+data/                   Canonical catalogue and provenance inputs
+scripts/                Dataset pipeline and validation
+docs/                   Architecture, API, report, runbook, and data notes
 ```
 
-## Testing
+## Verification
 
 ```powershell
 npm run lint
 npm run typecheck
 npm test
 npm run build
+npm run verify:quantities
+npm run verify:products
+npx tsx scripts/validate-products.ts
 ```
 
-Optional live and deterministic verification scripts are available as `verify:ai`, `verify:menus`, `verify:flow-reliability`, and `verify:quantities`. Live Gemini checks consume provider quota.
+The quantity, product, and dataset checks are deterministic and consume no provider quota. `verify:ai`, `verify:menus`, `verify:flow-reliability`, `verify:kiconnect-*`, `verify:purchasing`, and benchmark scripts call KI:connect and should be run deliberately.
 
-## Security note
+## Known limitations
 
-The Gemini key is server-only. `.env.local` is ignored by Git, and no secret or personal data should be committed. API errors sent to the browser exclude provider internals and stack traces.
+- The catalogue snapshot is incomplete and is not a live Transgourmet API, price feed, or stock system.
+- Price coverage is partial, so some budgets remain partial and are not procurement quotes.
+- Unknown dietary overlap and low-confidence product matches require review.
+- KI:connect remains an external dependency subject to latency, availability, and quota limits.
+- AI cache and backend state are process-local; there is no persistent plan database.
+- The prototype has no authentication, checkout, order submission, or official Transgourmet ordering integration.
 
-## Hackathon scope
+## Documentation
 
-eventa. is a hackathon prototype, not an official production Transgourmet / Prodega product. Product matching is designed around a curated Transgourmet dataset or adapter for the prototype; that boundary can later be replaced with an official catalogue/API integration if available.
-
-## Team
-
-Team details: _add hackathon team member names and roles before submission._
+- [Architecture](docs/ARCHITECTURE.md)
+- [Technical report](docs/TECHNICAL_REPORT.md)
+- [API contracts](docs/API.md)
+- [Dataset provenance](docs/TRANSGOURMET_DATASET.md)
+- [Demo runbook](docs/DEMO_RUNBOOK.md)
+- [Documentation index](docs/README.md)
+- [Historical backend audit](docs/backend-audit.md)

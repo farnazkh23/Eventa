@@ -82,7 +82,7 @@ describe('generateMenuRequestSchema', () => {
 })
 
 describe('menu response schemas', () => {
-  it('validates structured Gemini output without accepting model-provided IDs', () => {
+  it('validates structured AI output without accepting model-provided IDs', () => {
     expect(generatedMenuSchema.safeParse(generatedMenu).success).toBe(true)
     expect(generatedMenuSchema.safeParse({
       ...generatedMenu,
@@ -98,7 +98,7 @@ describe('menu response schemas', () => {
     expect(eventMenuSchema.safeParse(finalMenu).success).toBe(true)
   })
 
-  it('removes JSON Schema constraints unsupported by Gemini', () => {
+  it('removes JSON Schema constraints unsupported by the structured-output provider', () => {
     const serialized = JSON.stringify(generatedMenuJsonSchema)
     expect(serialized).not.toContain('exclusiveMinimum')
     expect(serialized).not.toContain('minLength')

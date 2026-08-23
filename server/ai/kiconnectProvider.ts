@@ -7,8 +7,8 @@ import { normalizeEventInterpretation } from '../schemas/normalizeEventInterpret
 import { normalizeMenu } from '../schemas/normalizeMenu.js'
 import { logDevelopmentServer } from '../observability/logger.js'
 import type { AIProvider } from './aiProvider.js'
-import { EVENT_INTERPRETATION_SYSTEM_INSTRUCTION } from './geminiEventInterpreter.js'
-import { createMenuPromptContents, MENU_GENERATION_SYSTEM_INSTRUCTION } from './geminiMenuGenerator.js'
+import { EVENT_INTERPRETATION_SYSTEM_INSTRUCTION } from './eventInterpretationPrompt.js'
+import { createMenuPromptContents, MENU_GENERATION_SYSTEM_INSTRUCTION } from './menuGenerationPrompt.js'
 import { generateKiconnectStructuredJson, KiconnectApiError, KiconnectStructuredOutputError, type KiconnectAttemptEvent } from './kiconnect.js'
 import type { MenuGenerationInput } from './menuGenerator.js'
 

@@ -1,6 +1,5 @@
 import { createServer } from 'node:http'
-import { GeminiEventInterpreter } from '../ai/geminiEventInterpreter.js'
-import { GeminiMenuGenerator } from '../ai/geminiMenuGenerator.js'
+import { createKiconnectProvider } from '../ai/createKiconnectProvider.js'
 import { handleGenerateMenu } from '../api/generateMenu.js'
 import { handleInterpretEvent } from '../api/interpretEvent.js'
 import { sendApiError, sendAppError } from '../api/http.js'
@@ -8,20 +7,18 @@ import { loadServerConfig } from '../config/env.js'
 
 const description = 'Birthday dinner in Zürich for 35 guests. 4 are vegan and we want a seated dinner.'
 const config = loadServerConfig()
-if (!config.geminiApiKey) throw new Error('GEMINI_API_KEY is not configured in .env.local')
-
-const interpreter = new GeminiEventInterpreter(config.geminiApiKey, config.geminiModel)
-const generator = new GeminiMenuGenerator(config.geminiApiKey, config.geminiModel)
+const provider = createKiconnectProvider(config)
+if (!provider) throw new Error('KICONNECT_API_KEY is not configured in .env.local')
 
 const server = createServer(async (request, response) => {
   const url = new URL(request.url ?? '/', `http://${request.headers.host ?? 'localhost'}`)
   try {
     if (request.method === 'POST' && url.pathname === '/api/interpret-event') {
-      await handleInterpretEvent(request, response, interpreter)
+      await handleInterpretEvent(request, response, provider)
       return
     }
     if (request.method === 'POST' && url.pathname === '/api/generate-menu') {
-      await handleGenerateMenu(request, response, generator)
+      await handleGenerateMenu(request, response, provider)
       return
     }
     sendApiError(response, 404, 'NOT_FOUND', 'API endpoint not found.')

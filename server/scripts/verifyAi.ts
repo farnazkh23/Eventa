@@ -1,4 +1,4 @@
-import { GeminiEventInterpreter } from '../ai/geminiEventInterpreter.js'
+import { createKiconnectProvider } from '../ai/createKiconnectProvider.js'
 import { loadServerConfig } from '../config/env.js'
 
 const descriptions = [
@@ -10,14 +10,11 @@ const descriptions = [
 
 const config = loadServerConfig()
 
-if (!config.geminiApiKey) {
-  throw new Error('GEMINI_API_KEY is not configured in .env.local')
-}
-
-const interpreter = new GeminiEventInterpreter(config.geminiApiKey, config.geminiModel)
+const provider = createKiconnectProvider(config)
+if (!provider) throw new Error('KICONNECT_API_KEY is not configured in .env.local')
 
 for (const [index, description] of descriptions.entries()) {
-  const result = await interpreter.interpret(description)
+  const result = await provider.interpret(description)
   console.info(`Case ${index + 1}: ${description}`)
   console.info(JSON.stringify(result, null, 2))
 }

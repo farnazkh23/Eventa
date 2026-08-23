@@ -1,5 +1,4 @@
-import { KiconnectProvider } from '../ai/kiconnectProvider.js'
-import { KiconnectFailoverProvider } from '../ai/kiconnectFailoverProvider.js'
+import { createKiconnectProvider } from '../ai/createKiconnectProvider.js'
 import { loadServerConfig } from '../config/env.js'
 import { loadCanonicalCatalogue } from '../products/canonicalCatalogue.js'
 import { matchProducts } from '../products/productMatcher.js'
@@ -12,16 +11,8 @@ import { calculateQuantitiesRequestSchema, quantityPlanSchema } from '../schemas
 const description = 'Corporate summer party for 120 people in Bern. We want a relaxed dinner buffet with one meat main, one vegetarian option and one vegan option for 8 guests. 5 guests are gluten-free. Budget is around CHF 50 per person. Please include a fresh starter, two side dishes, dessert and non-alcoholic drinks.'
 
 const config = loadServerConfig()
-if (!config.kiconnectApiKey) throw new Error('KICONNECT_API_KEY is not configured in .env.local')
-
-const provider = new KiconnectFailoverProvider(
-  new KiconnectProvider(config.kiconnectApiKey, config.kiconnectBaseUrl, config.kiconnectModel),
-  new KiconnectProvider(config.kiconnectApiKey, config.kiconnectBaseUrl, config.kiconnectFallbackModel, {
-    allowPartialQuantityDataAfterCorrection: true,
-  }),
-  config.kiconnectModel,
-  config.kiconnectFallbackModel,
-)
+const provider = createKiconnectProvider(config)
+if (!provider) throw new Error('KICONNECT_API_KEY is not configured in .env.local')
 
 const event = await provider.interpret(description)
 const menu = await provider.generate({ event, originalDescription: description })
