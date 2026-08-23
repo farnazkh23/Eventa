@@ -1,5 +1,7 @@
-export const introSessionKey = 'eventa:intro-played'
+export function shouldPlayIntro(prefersReducedMotion: boolean) {
+  return !prefersReducedMotion
+}
 
-export function shouldPlayIntro(alreadyPlayed: boolean, prefersReducedMotion: boolean) {
-  return !alreadyPlayed && !prefersReducedMotion
+export function shouldStartIntroPlayback(playbackStartedForDocument: boolean) {
+  return !playbackStartedForDocument
 }

@@ -1,16 +1,21 @@
 import { describe, expect, it } from 'vitest'
-import { shouldPlayIntro } from './introSession'
+import { shouldPlayIntro, shouldStartIntroPlayback } from './introSession'
 
-describe('Eventa intro session behavior', () => {
-  it('plays once in a motion-enabled fresh session', () => {
-    expect(shouldPlayIntro(false, false)).toBe(true)
+describe('Eventa intro document-load behavior', () => {
+  it('plays on a motion-enabled document load', () => {
+    expect(shouldPlayIntro(false)).toBe(true)
   })
 
-  it('does not replay in the same session', () => {
-    expect(shouldPlayIntro(true, false)).toBe(false)
+  it('does not depend on session playback history', () => {
+    expect(shouldPlayIntro(false)).toBe(true)
+  })
+
+  it('starts only once within the current document', () => {
+    expect(shouldStartIntroPlayback(false)).toBe(true)
+    expect(shouldStartIntroPlayback(true)).toBe(false)
   })
 
   it('skips playback when reduced motion is preferred', () => {
-    expect(shouldPlayIntro(false, true)).toBe(false)
+    expect(shouldPlayIntro(true)).toBe(false)
   })
 })

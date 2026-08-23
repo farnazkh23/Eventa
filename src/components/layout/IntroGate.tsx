@@ -1,24 +1,17 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { introSessionKey, shouldPlayIntro } from '../../app/introSession'
+import { shouldPlayIntro, shouldStartIntroPlayback } from '../../app/introSession'
 import styles from './IntroGate.module.css'
 
 let initialPlaybackDecision: boolean | null = null
+let playbackStartedForDocument = false
 
 function getInitialPlaybackDecision() {
   if (typeof window === 'undefined') return false
   if (initialPlaybackDecision !== null) return initialPlaybackDecision
 
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  let alreadyPlayed = false
-
-  try {
-    alreadyPlayed = window.sessionStorage.getItem(introSessionKey) === 'true'
-  } catch {
-    // Storage restrictions must never block access to Eventa.
-  }
-
-  initialPlaybackDecision = shouldPlayIntro(alreadyPlayed, prefersReducedMotion)
+  initialPlaybackDecision = shouldPlayIntro(prefersReducedMotion)
   return initialPlaybackDecision
 }
 
@@ -30,11 +23,6 @@ export function IntroGate({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!showIntro) return
-    try {
-      window.sessionStorage.setItem(introSessionKey, 'true')
-    } catch {
-      // Playback can continue even when session storage is unavailable.
-    }
 
     const video = videoRef.current
     if (!video) {
@@ -42,6 +30,9 @@ export function IntroGate({ children }: { children: ReactNode }) {
       setShowIntro(false)
       return
     }
+
+    if (!shouldStartIntroPlayback(playbackStartedForDocument)) return
+    playbackStartedForDocument = true
 
     const playback = video.play()
     playback?.catch(() => {
