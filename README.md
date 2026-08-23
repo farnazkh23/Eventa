@@ -1,4 +1,4 @@
-# eventa.
+# Eventa.
 
 ## Event in a Box
 
